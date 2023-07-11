@@ -1,18 +1,51 @@
-﻿using System.Net;
+﻿using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Hosting;
+using System.CommandLine.Parsing;
+using System.Globalization;
 using System.Text.RegularExpressions;
+using MangaInUaDownloader.Commands;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-#pragma warning disable SYSLIB0014
+// miu-dl [-o "Title\Chapter"] URL-chapter
+// miu-dl [--translators-list] URL-title // out: ch A - B: tr.1 \n ch C - D: tr.1, tr.2 ...
+// miu-dl [--only-translator "name"][--only-translator "name"]
+// [--from-chapter int][--to-chapter int][--chapter int]
+// [--from-volume int][--to-volume int][--volume int] URL-title
 
 namespace MangaInUaDownloader
 {
     internal static class Program
     {
-        public static void Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.Unicode;
             Console. InputEncoding = System.Text.Encoding.Unicode;
+            
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
-            new InputParser().Run(args);
+            //var root = RootCommandBuilder.Build();
+            //var handler = new RootCommandHandler(new MangaService());
+            //root.SetHandler(chapter => handler.Chapter = chapter);
+
+            var root = RootCommandBuilder.Build();
+            var parser = new CommandLineBuilder(root).UseDefaults().Build();
+            
+            /*
+             * .UseHost(_ => Host.CreateDefaultBuilder(args), (builder) =>
+                {
+                    builder
+                        .ConfigureServices(services => { services.TryAddSingleton<MangaService>(); })
+                        .ConfigureLogging(loggingBuilder => loggingBuilder.ClearProviders())
+                        .UseCommandHandler<RootCommand, RootCommandHandler>();
+                })
+             */
+
+            return await parser.InvokeAsync(args);
+
+            //new InputParser().Run(args);
         }
     }
 
@@ -27,36 +60,6 @@ namespace MangaInUaDownloader
             var url = _url.IsMatch(input[^1]) ? input[^1] : throw new ArgumentException("No URL speified");
             
             new Downloader(path).Download(url);
-        }
-    }
-    public class Downloader
-    {
-        private const string miu = "https://manga.in.ua";
-
-        private static readonly Regex _ul = new(@"<ul class=""xfieldimagegallery.*ul>");
-        private static readonly Regex _li = new(@"<li.*?src=""(.*?)"".*?li>");
-
-        private readonly string _path;
-
-        public Downloader(string path) => _path = Path.Combine(path.Split('\\', '/'));
-
-        public void Download(string url)
-        {
-            Directory.CreateDirectory(_path);
-
-            using var client = new WebClient();
-            var html = client.DownloadString(url);
-
-            var pages = _li.Matches(_ul.Match(html).Value).Select(m => m.Groups[1].Value).ToList();
-
-            for (var i = 0; i < pages.Count; i++)
-            {
-                var page = pages[i];
-                var number = (i + 1).ToString().PadLeft(2, '0');
-                var output = Path.Combine(_path, $"{number}{Path.GetExtension(page)}");
-                client.DownloadFile($"{miu}{page}", output);
-                Console.WriteLine($"[downloaded] \"{output}\"");
-            }
         }
     }
 }

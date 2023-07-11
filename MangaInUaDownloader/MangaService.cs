@@ -1,14 +1,15 @@
-using System.Net;
-using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using MangaInUaDownloader.Commands;
 using PuppeteerSharp;
+using Range = MangaInUaDownloader.Commands.Range;
 
 namespace MangaInUaDownloader
 {
     public class MangaService
     {
         private const string miu = "https://manga.in.ua";
+        private const string ALT = "Альтернативний переклад";
     
         private static readonly Regex _ul = new(@"<ul class=""xfieldimagegallery.*ul>");
         private static readonly Regex _li = new(@"<li.*?src=""(.*?)"".*?li>");
@@ -19,18 +20,8 @@ namespace MangaInUaDownloader
         {
             var html = await GetFullHTML(url.ToString()); // html with all chapters loaded
 
-            Console.WriteLine("Scrapping information...");
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            var nodes = doc.DocumentNode.SelectNodes("//div[@id='linkstocomics']//div[@class='ltcitems']");
-            var chapters = nodes.Select(n => new MangaChapter()
-            {
-                Volume = Convert.ToInt32(n.Attributes["manga-tom"].Value),
-                Chapter = Convert.ToSingle(n.Attributes["manga-chappter"].Value),
-                Translator = n.Attributes["translate"].Value
-            }).OrderBy(m => m.Chapter).GroupBy(m => m.Chapter).ToDictionary(g => g.Key, g => g.ToArray());
+            var nodes = GetAllChapters(html);
+            var chapters = nodes.Select(ParseAsChapter).OrderBy(m => m.Chapter).GroupBy(m => m.Chapter).ToDictionary(g => g.Key, g => g.ToList());
 
             var translations = new List<TranslatedChapters>();
             TranslatedChapters? dummy = null;
@@ -62,6 +53,50 @@ namespace MangaInUaDownloader
             return translations;
         }
 
+        public async Task<IEnumerable<MangaChapter>> GetChapters(Uri url, RangeF chapter, Range volume, string? translator, bool downloadOthers)
+        {
+            var html = await GetFullHTML(url.ToString());
+            var nodes = GetAllChapters(html);
+
+            var chapters = nodes
+                .Select(ParseAsChapter)
+                .OrderBy(m => m.Chapter)
+                .Where(x =>
+                    x.Volume  >=  volume.Min &&  x.Volume  <=  volume.Max &&
+                    x.Chapter >= chapter.Min &&  x.Chapter <= chapter.Max)
+                .ToList();
+
+            foreach (var c in chapters)
+            {
+                if (c.Title.Contains(ALT))
+                {
+                    c.IsAlternative = true;
+                    c.Title = chapters.First(x => x.Chapter.Equals(c.Chapter) && !x.Title.Contains(ALT)).Title;
+                }
+            }
+            
+            // download others + tr => group by chap > select g.where tr = x
+            // only tr? => select only where tr = tr
+            // nothing specified? => take main trainslation
+            if (translator is not null)
+            {
+                if (downloadOthers)
+                {
+                    return chapters
+                        .GroupBy(x => x.Chapter)
+                        .Select(g => g.Any(x => TranslatedBy(x, translator)) ? g.First(x => TranslatedBy(x, translator)) : g.First(x => !x.IsAlternative));
+                }
+                else
+                {
+                    return chapters.Where(x => TranslatedBy(x, translator));
+                }
+            }
+            else
+            {
+                return chapters.Where(x => !x.IsAlternative);
+            }
+        }
+
         private async Task<string> GetFullHTML(string url)
         {
             Console.WriteLine("Fetching browser...");
@@ -78,18 +113,47 @@ namespace MangaInUaDownloader
             await page.WaitForSelectorAsync("div.ltcitems");
             return await page.GetContentAsync(); // html with all chapters loaded
         }
+
+        private HtmlNodeCollection GetAllChapters(string html)
+        {
+            Console.WriteLine("Collecting chapters...");
+            
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            return doc.DocumentNode.SelectNodes("//div[@id='linkstocomics']//div[@class='ltcitems']");
+        }
+
+        private MangaChapter ParseAsChapter(HtmlNode node)
+        {
+            var a = node.ChildNodes["a"];
+            return new MangaChapter()
+            {
+                Volume  = Convert.ToInt32 (node.Attributes["manga-tom"     ].Value),
+                Chapter = Convert.ToSingle(node.Attributes["manga-chappter"].Value),
+                Translator =               node.Attributes["translate"     ].Value,
+                Title = a.InnerText,
+                URL   = a.Attributes["href"].Value
+            };
+        }
+
+        private bool TranslatedBy(MangaChapter chapter, string translator)
+        {
+            return chapter.Translator.Contains(translator, StringComparison.InvariantCultureIgnoreCase);
+        }
     }
 
     public class TranslatedChapters
     {
-        public float ChapterA, ChapterB;
+        public float ChapterA, ChapterB; // chapters can have numbers like "30.2"
         public string[] Translators;
     }
     
     public class MangaChapter
     {
         public int Volume;
-        public float Chapter; // chapters can be like "30.2"
+        public float Chapter;
+        public bool IsAlternative;
         public string Translator, Title, URL;
     }
 }

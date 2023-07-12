@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using MangaInUaDownloader.Model;
+using MangaInUaDownloader.Services;
 
 #pragma warning disable SYSLIB0014
 

@@ -1,9 +1,10 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using MangaInUaDownloader.Model;
 using MangaInUaDownloader.Utils;
 using Range = MangaInUaDownloader.Utils.Range;
 
-namespace MangaInUaDownloader
+namespace MangaInUaDownloader.Services
 {
     public class MangaService
     {
@@ -101,7 +102,7 @@ namespace MangaInUaDownloader
             }
         }
 
-        public static async Task<string> GetFullHTML(string url)
+        private static async Task<string> GetFullHTML(string url)
         {
             var page = await ScrapService.Instance.OpenWebPageAsync(url, "manga");
             
@@ -132,19 +133,5 @@ namespace MangaInUaDownloader
         {
             return chapter.Translator.Contains(translator, StringComparison.InvariantCultureIgnoreCase);
         }
-    }
-
-    public class TranslatedChapters
-    {
-        public float ChapterA, ChapterB; // chapters can have numbers like "30.2"
-        public string[] Translators;
-    }
-    
-    public class MangaChapter
-    {
-        public int Volume;
-        public float Chapter;
-        public bool IsAlternative;
-        public string Translator, Title, URL;
     }
 }

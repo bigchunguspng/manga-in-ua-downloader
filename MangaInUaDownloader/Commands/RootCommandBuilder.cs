@@ -1,4 +1,5 @@
 using System.CommandLine;
+using MangaInUaDownloader.Services;
 
 namespace MangaInUaDownloader.Commands
 {

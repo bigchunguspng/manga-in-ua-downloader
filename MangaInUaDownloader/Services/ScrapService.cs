@@ -2,7 +2,7 @@ using HtmlAgilityPack;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
 
-namespace MangaInUaDownloader
+namespace MangaInUaDownloader.Services
 {
     public class ScrapService
     {

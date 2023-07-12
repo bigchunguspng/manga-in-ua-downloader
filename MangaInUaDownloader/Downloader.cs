@@ -12,8 +12,6 @@ namespace MangaInUaDownloader
     {
         private const string miu = "https://manga.in.ua";
 
-        private static readonly Regex _ul = new(@"<ul class=""xfieldimagegallery.*ul>");
-        private static readonly Regex _li = new(@"<li.*?src=""(.*?)"".*?li>");
         private static readonly Regex _chapter_url  = new(@"https?:\/\/manga\.in\.ua\/chapters\/\S+");
 
         private readonly bool _chapterize;
@@ -60,11 +58,11 @@ namespace MangaInUaDownloader
             var links = pages.Select(node => node.Attributes["data-src"].Value).ToList();
 
             using var client = new WebClient();
-            for (var i = 0; i < links.Count; i++)
+            foreach (var link in links)
             {
                 var number = page_number++.ToString().PadLeft(_chapterize ? 2 : 3, '0');
-                var output = Path.Combine(path, $"{number}{Path.GetExtension(links[i])}");
-                client.DownloadFile(links[i], output);
+                var output = Path.Combine(path, $"{number}{Path.GetExtension(link)}");
+                client.DownloadFile(link, output);
                 Console.WriteLine($"[downloaded] \"{output}\"");
             }
         }
@@ -75,7 +73,7 @@ namespace MangaInUaDownloader
             using var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
             Console.WriteLine("Launching Puppeteer...");
-            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = false });
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
 
             Console.WriteLine("Opening browser...");
             await using var page = await browser.NewPageAsync();
@@ -83,7 +81,6 @@ namespace MangaInUaDownloader
             await page.GoToAsync(url);
             await page.WaitForSelectorAsync("div#startloadingcomicsbuttom a", new WaitForSelectorOptions() { Visible = true });
             Console.WriteLine("Clicking...");
-            //await Task.Delay(420);
             await page.ClickAsync("div#startloadingcomicsbuttom a", new ClickOptions() { Delay = 95 });
             Console.WriteLine("Waiting for pages...");
             await page.WaitForSelectorAsync("div#comics ul.xfieldimagegallery.loadcomicsimages");

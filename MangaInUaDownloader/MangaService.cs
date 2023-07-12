@@ -10,11 +10,8 @@ namespace MangaInUaDownloader
     {
         private const string miu = "https://manga.in.ua";
         private const string ALT = "Альтернативний переклад";
-        public  const string UNTITLED = "Без назви";
+        public  const string UNTITLED = "(Без назви)";
     
-        private static readonly Regex _ul = new(@"<ul class=""xfieldimagegallery.*ul>");
-        private static readonly Regex _li = new(@"<li.*?src=""(.*?)"".*?li>");
-        private static readonly Regex _chapters = new(@"<div id=""linkstocomics"".*>");
         private static readonly Regex _title = new(@".+ - (.+)");
 
         public async Task<List<TranslatedChapters>> GetTranslatorsByChapter(Uri url)
@@ -74,9 +71,11 @@ namespace MangaInUaDownloader
                     c.IsAlternative = true;
                     c.Title = chapters.First(x => x.Chapter.Equals(c.Chapter) && !x.Title.Contains(ALT)).Title;
                 }
-
-                var title = _title.Match(c.Title).Groups[1].Value;
-                c.Title = string.IsNullOrEmpty(title) ? UNTITLED : title;
+                else
+                {
+                    var title = _title.Match(c.Title).Groups[1].Value;
+                    c.Title = string.IsNullOrEmpty(title) ? UNTITLED : title;
+                }
             }
             
             // download others + tr => group by chap > select g.where tr = x
@@ -107,7 +106,7 @@ namespace MangaInUaDownloader
             using var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
             Console.WriteLine("Launching Puppeteer...");
-            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = false });
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
 
             Console.WriteLine("Opening browser...");
             await using var page = await browser.NewPageAsync();

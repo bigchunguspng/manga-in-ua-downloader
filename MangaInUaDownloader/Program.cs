@@ -15,6 +15,8 @@ using Microsoft.Extensions.Logging;
 // [--from-chapter int][--to-chapter int][--chapter int]
 // [--from-volume int][--to-volume int][--volume int] URL-title
 
+// todo: url validation, 0 collection messages etc.
+
 namespace MangaInUaDownloader
 {
     internal static class Program
@@ -52,18 +54,4 @@ namespace MangaInUaDownloader
             //new InputParser().Run(args);
         }
     }
-
-    /*public class InputParser // miu-dl [-p "Title\Chapter"] URL
-    {
-        private readonly Regex _url  = new(@"https?:\/\/manga\.in\.ua\/\S+");
-
-        public void Run(string[] input)
-        {
-            var path = input.Length > 2 && input[0] == "-p" ? input[1] : Environment.CurrentDirectory;
-
-            var url = _url.IsMatch(input[^1]) ? input[^1] : throw new ArgumentException("No URL speified");
-            
-            new Downloader(path).DownloadChapter(url);
-        }
-    }*/
 }

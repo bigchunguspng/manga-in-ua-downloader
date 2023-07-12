@@ -20,8 +20,9 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Choose chapters translated by that translator if there is a choice.") { ArgumentHelpName = "name" };
 
         public static readonly Option<bool> ListTranslatorsOption = new("--list-translators", "Show who translated which chapters.");
+        public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Show chapters selected by given query (DEBUG OPTION).") { IsHidden = true };
 
-        public static readonly Argument<Uri> URLArg = new("Link to the manga, e.g: https://manga.in.ua/mangas/...html.");
+        public static readonly Argument<Uri> URLArg = new("Manga URL, e.g: https://manga.in.ua/mangas/...html.");
 
         private static void AddAliases()
         {
@@ -37,7 +38,9 @@ namespace MangaInUaDownloader.Commands
             
             OnlyTranslatorOption.AddAlias("-o");
             PreferTranslatorOption.AddAlias("-p");
+            
             ListTranslatorsOption.AddAlias("-l");
+            ListChaptersOption.AddAlias("-list");
         }
 
         public static RootCommand Build()
@@ -54,6 +57,7 @@ namespace MangaInUaDownloader.Commands
             Root.Add(OnlyTranslatorOption);
             Root.Add(PreferTranslatorOption);
             Root.Add(ListTranslatorsOption);
+            Root.Add(ListChaptersOption);
 
             Root.AddArgument(URLArg);
 

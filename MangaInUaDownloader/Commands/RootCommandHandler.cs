@@ -4,26 +4,12 @@ namespace MangaInUaDownloader.Commands
 {
     public class RootCommandHandler : ICommandHandler
     {
-        /*public int Chapter { get; set; }
-        public int FromChapter { get; set; }
-        public int ToChapter { get; set; }
-        public int Volume { get; set; }
-        public int FromVolume { get; set; }
-        public int ToVolume { get; set; }
-
-        public string OnlyTranslator { get; set; }
-        public string PreferTranslator { get; set; }
-
-        public bool TranslatorsList { get; set; }
-
-        public Uri URL { get; set; }*/
-        
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
         private bool Chapterize;
         private string? Translator;
         private bool DownloadOtherTranslators;
-        private bool ListTranslators;
+        private bool ListTranslators, ListChapters;
         private Uri? URL;
 
         private readonly MangaService _mangaService;
@@ -48,6 +34,7 @@ namespace MangaInUaDownloader.Commands
 
             Chapterize = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterizeOption);
             ListTranslators = context.ParseResult.GetValueForOption(RootCommandBuilder.ListTranslatorsOption);
+            ListChapters = context.ParseResult.GetValueForOption(RootCommandBuilder.ListChaptersOption);
 
             var ot = context.ParseResult.GetValueForOption(RootCommandBuilder.OnlyTranslatorOption);
             var pt = context.ParseResult.GetValueForOption(RootCommandBuilder.PreferTranslatorOption);
@@ -75,17 +62,14 @@ namespace MangaInUaDownloader.Commands
                 {
                     Console.WriteLine($"Vol. {chapter.Volume} Ch. {chapter.Chapter} {chapter.Title} (by {chapter.Translator}{(chapter.IsAlternative ? " (ALT)" : "")})");
                 }
-                
-                var downloader = new Downloader(Chapterize);
-                await downloader.DownloadChapters(chapters);
+
+                if (!ListChapters)
+                {
+                    var downloader = new Downloader(Chapterize);
+                    await downloader.DownloadChapters(chapters);
+                }
             }
-
-            //Console.WriteLine(Chapter);
-            //Console.WriteLine(FromChapter);
-            //Console.WriteLine(Translator);
-            //Console.WriteLine(ListTranslators);
-            //Console.WriteLine(URL.ToString());
-
+            
             return 2;
         }
     }

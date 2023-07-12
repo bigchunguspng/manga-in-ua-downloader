@@ -23,8 +23,27 @@ namespace MangaInUaDownloader.Commands
 
         public static readonly Argument<Uri> URLArg = new("Link to the manga, e.g: https://manga.in.ua/mangas/...html.");
 
+        private static void AddAliases()
+        {
+            ChapterOption.AddAlias("-c");
+            FromChapterOption.AddAlias("-f");
+            ToChapterOption.AddAlias("-t");
+            
+            VolumeOption.AddAlias("-v");
+            FromVolumeOption.AddAlias("-F");
+            ToVolumeOption.AddAlias("-T");
+            
+            ChapterizeOption.AddAlias("-s");
+            
+            OnlyTranslatorOption.AddAlias("-o");
+            PreferTranslatorOption.AddAlias("-p");
+            ListTranslatorsOption.AddAlias("-l");
+        }
+
         public static RootCommand Build()
         {
+            AddAliases();
+            
             Root.Add(ChapterOption);
             Root.Add(FromChapterOption);
             Root.Add(ToChapterOption);

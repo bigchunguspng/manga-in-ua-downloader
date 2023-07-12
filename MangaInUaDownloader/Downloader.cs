@@ -16,11 +16,11 @@ namespace MangaInUaDownloader
         private static readonly Regex _li = new(@"<li.*?src=""(.*?)"".*?li>");
         private static readonly Regex _chapter_url  = new(@"https?:\/\/manga\.in\.ua\/chapters\/\S+");
 
-        private readonly string _path;
+        private readonly bool _chapterize;
 
-        public Downloader(string path) => _path = Path.Combine(path.Split('\\', '/'));
+        public Downloader(bool chapterize) => _chapterize = chapterize;
 
-        public async Task DownloadChapters(IEnumerable<MangaChapter> chapters, bool chapterize)
+        public async Task DownloadChapters(IEnumerable<MangaChapter> chapters)
         {
             var volumes = chapters.GroupBy(x => x.Volume);
             foreach (var volume in volumes)
@@ -28,7 +28,7 @@ namespace MangaInUaDownloader
                 var volumeDir = Directory.CreateDirectory($"Том {volume.Key}").Name;
                 foreach (var chapter in volume)
                 {
-                    if (chapterize)
+                    if (_chapterize)
                     {
                         var chapterDir = chapter.Title == MangaService.UNTITLED
                             ? $"Розділ {chapter.Chapter}"
@@ -44,30 +44,21 @@ namespace MangaInUaDownloader
             }
         }
 
-        public async Task DownloadChapter(MangaChapter chapter, string path)
+        private async Task DownloadChapter(MangaChapter chapter, string path)
         {
-            var url = "https://manga.in.ua/chapters/20438-ljudina-benzopila-tom-12-rozdil-100.html"; // chapter.URL;
+            var html = await GetFullHTML(chapter.URL);
+            var pages = GetAllPages(html);
 
-            var html = await GetFullHTML(url);
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
+            var links = pages.Select(node => node.Attributes["data-src"].Value).ToList();
 
-            Console.WriteLine(doc.Text);
-            
-            //var pages = doc.DocumentNode.SelectNodes()
-            /*using var client = new WebClient();
-            var html = client.DownloadString(url);
-
-            var pages = _li.Matches(_ul.Match(html).Value).Select(m => m.Groups[1].Value).ToList();
-
-            for (var i = 0; i < pages.Count; i++)
+            using var client = new WebClient();
+            for (var i = 0; i < links.Count; i++)
             {
-                var page = pages[i];
-                var number = (i + 1).ToString().PadLeft(2, '0');
-                var output = Path.Combine(_path, $"{number}{Path.GetExtension(page)}");
-                client.DownloadFile($"{miu}{page}", output);
+                var number = (i + 1).ToString().PadLeft(_chapterize ? 2 : 3, '0');
+                var output = Path.Combine(path, $"{number}{Path.GetExtension(links[i])}");
+                client.DownloadFile(links[i], output);
                 Console.WriteLine($"[downloaded] \"{output}\"");
-            }*/
+            }
         }
         
         private async Task<string> GetFullHTML(string url)
@@ -88,6 +79,16 @@ namespace MangaInUaDownloader
             Console.WriteLine("Waiting for pages...");
             await page.WaitForSelectorAsync("div#comics ul.xfieldimagegallery.loadcomicsimages");
             return await page.GetContentAsync();
+        }
+        
+        private HtmlNodeCollection GetAllPages(string html)
+        {
+            Console.WriteLine("Collecting pages...");
+            
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            return doc.DocumentNode.SelectNodes("//div[@id='comics']//ul[@class='xfieldimagegallery loadcomicsimages']//li//img");
         }
     }
 }

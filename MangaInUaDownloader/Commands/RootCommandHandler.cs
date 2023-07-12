@@ -70,11 +70,14 @@ namespace MangaInUaDownloader.Commands
                 var c = Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter);
                 var v = Volume  < 0 ? new Range (FromVolume,  ToVolume ) : new Range (Volume,  Volume );
 
-                var chapters = await _mangaService.GetChapters(URL, c, v, Translator, DownloadOtherTranslators);
+                var chapters = (await _mangaService.GetChapters(URL, c, v, Translator, DownloadOtherTranslators)).ToList();
                 foreach (var chapter in chapters)
                 {
                     Console.WriteLine($"Vol. {chapter.Volume} Ch. {chapter.Chapter} {chapter.Title} (by {chapter.Translator}{(chapter.IsAlternative ? " (ALT)" : "")})");
                 }
+                
+                var downloader = new Downloader(Chapterize);
+                await downloader.DownloadChapters(chapters);
             }
 
             //Console.WriteLine(Chapter);

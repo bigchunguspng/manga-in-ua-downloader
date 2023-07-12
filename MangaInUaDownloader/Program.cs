@@ -26,10 +26,10 @@ namespace MangaInUaDownloader
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
-            var d = new Downloader("sadasdasd");
+            /*var d = new Downloader("sadasdasd");
             await d.DownloadChapter(new MangaChapter(), "asdas");
 
-            return await Task.FromResult(1);
+            return await Task.FromResult(1);*/
             //var root = RootCommandBuilder.Build();
             //var handler = new RootCommandHandler(new MangaService());
             //root.SetHandler(chapter => handler.Chapter = chapter);

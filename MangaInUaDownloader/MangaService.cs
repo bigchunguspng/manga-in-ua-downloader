@@ -1,28 +1,29 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using MangaInUaDownloader.Commands;
-using PuppeteerSharp;
-using Range = MangaInUaDownloader.Commands.Range;
+using MangaInUaDownloader.Utils;
+using Range = MangaInUaDownloader.Utils.Range;
 
 namespace MangaInUaDownloader
 {
     public class MangaService
     {
         private const string miu = "https://manga.in.ua";
+
         private const string ALT = "Альтернативний переклад";
+        private const string XPATH_CHAPTERS = "//div[@id='linkstocomics']//div[@class='ltcitems']";
         public  const string UNTITLED = "(Без назви)";
     
         private static readonly Regex _title = new(@".+ - (.+)");
 
         public async Task<List<TranslatedChapters>> GetTranslatorsByChapter(Uri url)
         {
-            var html = await GetFullHTML(url.ToString(), "div.ltcitems"); // html with all chapters loaded
+            var html = await GetFullHTML(url.ToString()); // html with all chapters loaded
 
             var nodes = GetAllChapters(html);
             var chapters = nodes.Select(ParseAsChapter).OrderBy(m => m.Chapter).GroupBy(m => m.Chapter).ToDictionary(g => g.Key, g => g.ToList());
 
             var translations = new List<TranslatedChapters>();
-            TranslatedChapters? dummy = null;
+            TranslatedChapters? dummy = null; // todo return mangachap list grouped by translators array
             foreach (var chapter in chapters)
             {
                 if (dummy is null)
@@ -53,7 +54,7 @@ namespace MangaInUaDownloader
 
         public async Task<IEnumerable<MangaChapter>> GetChapters(Uri url, RangeF chapter, Range volume, string? translator, bool downloadOthers)
         {
-            var html = await GetFullHTML(url.ToString(), "div.ltcitems");
+            var html = await GetFullHTML(url.ToString());
             var nodes = GetAllChapters(html);
 
             var chapters = nodes
@@ -100,31 +101,18 @@ namespace MangaInUaDownloader
             }
         }
 
-        public static async Task<string> GetFullHTML(string url, string selector)
+        public static async Task<string> GetFullHTML(string url)
         {
-            Console.WriteLine("Fetching browser...");
-            using var browserFetcher = new BrowserFetcher();
-            await browserFetcher.DownloadAsync();
-            Console.WriteLine("Launching Puppeteer...");
-            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+            var page = await ScrapService.Instance.OpenWebPageAsync(url, "manga");
+            
+            await ScrapService.Instance.LoadElement(page, "div.ltcitems", "chapters");
 
-            Console.WriteLine("Opening browser...");
-            await using var page = await browser.NewPageAsync();
-            Console.WriteLine("Opening manga page...");
-            await page.GoToAsync(url);
-            Console.WriteLine("Loading chapters...");
-            await page.WaitForSelectorAsync(selector);
-            return await page.GetContentAsync(); // html with all chapters loaded
+            return await ScrapService.Instance.GetContent(page); // html with all chapters loaded
         }
 
         private HtmlNodeCollection GetAllChapters(string html)
         {
-            Console.WriteLine("Collecting chapters...");
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            return doc.DocumentNode.SelectNodes("//div[@id='linkstocomics']//div[@class='ltcitems']");
+            return ScrapService.Instance.GetHTMLNodes(html, XPATH_CHAPTERS, "Collecting chapters...");
         }
 
         private MangaChapter ParseAsChapter(HtmlNode node)

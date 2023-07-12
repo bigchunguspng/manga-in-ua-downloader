@@ -20,7 +20,7 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Choose chapters translated by that translator if there is a choice.") { ArgumentHelpName = "name" };
 
         public static readonly Option<bool> ListTranslatorsOption = new("--list-translators", "Show who translated which chapters.");
-        public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Show chapters selected by given query (DEBUG OPTION).") { IsHidden = true };
+        public static readonly Option<bool>    ListChaptersOption = new("--list-chapters", "Show chapters selected by given query (DEBUG OPTION).") { IsHidden = true };
 
         public static readonly Argument<Uri> URLArg = new("Manga URL, e.g: https://manga.in.ua/mangas/...html.");
 

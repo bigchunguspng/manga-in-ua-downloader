@@ -17,24 +17,32 @@ namespace MangaInUaDownloader
         private static readonly Regex _chapter_url  = new(@"https?:\/\/manga\.in\.ua\/chapters\/\S+");
 
         private readonly bool _chapterize;
+        private int page_number;
+
+        void ResetPageCount() => page_number = 1;
 
         public Downloader(bool chapterize) => _chapterize = chapterize;
 
         public async Task DownloadChapters(IEnumerable<MangaChapter> chapters)
         {
-            var volumes = chapters.GroupBy(x => x.Volume);
+            var volumes = chapters.GroupBy(x => x.Volume).ToDictionary(g => g.Key, g => g.ToList());
             foreach (var volume in volumes)
             {
+                ResetPageCount();
+                
                 var volumeDir = Directory.CreateDirectory($"Том {volume.Key}").Name;
-                foreach (var chapter in volume)
+                foreach (var chapter in volume.Value)
                 {
                     if (_chapterize)
                     {
-                        var chapterDir = chapter.Title == MangaService.UNTITLED
+                        var title = chapter.Title == MangaService.UNTITLED
                             ? $"Розділ {chapter.Chapter}"
                             : $"Розділ {chapter.Chapter} - {chapter.Title}";
+                        var chapterDir = Path.Combine(volumeDir, title);
                         Directory.CreateDirectory(chapterDir);
-                        await DownloadChapter(chapter, Path.Combine(volumeDir, chapterDir));
+                        await DownloadChapter(chapter, chapterDir);
+                        
+                        ResetPageCount();
                     }
                     else
                     {
@@ -54,7 +62,7 @@ namespace MangaInUaDownloader
             using var client = new WebClient();
             for (var i = 0; i < links.Count; i++)
             {
-                var number = (i + 1).ToString().PadLeft(_chapterize ? 2 : 3, '0');
+                var number = page_number++.ToString().PadLeft(_chapterize ? 2 : 3, '0');
                 var output = Path.Combine(path, $"{number}{Path.GetExtension(links[i])}");
                 client.DownloadFile(links[i], output);
                 Console.WriteLine($"[downloaded] \"{output}\"");
@@ -67,15 +75,16 @@ namespace MangaInUaDownloader
             using var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
             Console.WriteLine("Launching Puppeteer...");
-            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = false });
 
             Console.WriteLine("Opening browser...");
             await using var page = await browser.NewPageAsync();
             Console.WriteLine("Opening chapter page...");
             await page.GoToAsync(url);
-            await page.WaitForSelectorAsync("div#startloadingcomicsbuttom");
+            await page.WaitForSelectorAsync("div#startloadingcomicsbuttom a", new WaitForSelectorOptions() { Visible = true });
             Console.WriteLine("Clicking...");
-            await page.ClickAsync("div#startloadingcomicsbuttom");
+            //await Task.Delay(420);
+            await page.ClickAsync("div#startloadingcomicsbuttom a", new ClickOptions() { Delay = 95 });
             Console.WriteLine("Waiting for pages...");
             await page.WaitForSelectorAsync("div#comics ul.xfieldimagegallery.loadcomicsimages");
             return await page.GetContentAsync();

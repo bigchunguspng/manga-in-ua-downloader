@@ -107,7 +107,7 @@ namespace MangaInUaDownloader
             using var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
             Console.WriteLine("Launching Puppeteer...");
-            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = false });
 
             Console.WriteLine("Opening browser...");
             await using var page = await browser.NewPageAsync();

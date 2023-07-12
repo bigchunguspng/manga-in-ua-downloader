@@ -20,7 +20,7 @@ namespace MangaInUaDownloader.Commands
         
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
-        private bool ChapterFolders;
+        private bool Chapterize;
         private string? Translator;
         private bool DownloadOtherTranslators;
         private bool ListTranslators;
@@ -46,7 +46,7 @@ namespace MangaInUaDownloader.Commands
             FromVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.FromVolumeOption);
             ToVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.ToVolumeOption);
 
-            ChapterFolders = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterFoldersOption);
+            Chapterize = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterizeOption);
             ListTranslators = context.ParseResult.GetValueForOption(RootCommandBuilder.ListTranslatorsOption);
 
             var ot = context.ParseResult.GetValueForOption(RootCommandBuilder.OnlyTranslatorOption);
@@ -56,7 +56,7 @@ namespace MangaInUaDownloader.Commands
 
             if (ListTranslators)
             {
-                var translators = await _mangaService.ListTranslators(URL);
+                var translators = await _mangaService.GetTranslatorsByChapter(URL);
                 foreach (var x in translators)
                 {
                     var chap = x.ChapterA.Equals(x.ChapterB) ? $"{x.ChapterA}" : $"{x.ChapterA} - {x.ChapterB}";

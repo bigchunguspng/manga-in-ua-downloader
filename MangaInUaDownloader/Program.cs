@@ -26,6 +26,10 @@ namespace MangaInUaDownloader
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
+            var d = new Downloader("sadasdasd");
+            await d.DownloadChapter(new MangaChapter(), "asdas");
+
+            return await Task.FromResult(1);
             //var root = RootCommandBuilder.Build();
             //var handler = new RootCommandHandler(new MangaService());
             //root.SetHandler(chapter => handler.Chapter = chapter);
@@ -49,7 +53,7 @@ namespace MangaInUaDownloader
         }
     }
 
-    public class InputParser // miu-dl [-p "Title\Chapter"] URL
+    /*public class InputParser // miu-dl [-p "Title\Chapter"] URL
     {
         private readonly Regex _url  = new(@"https?:\/\/manga\.in\.ua\/\S+");
 
@@ -59,7 +63,7 @@ namespace MangaInUaDownloader
 
             var url = _url.IsMatch(input[^1]) ? input[^1] : throw new ArgumentException("No URL speified");
             
-            new Downloader(path).Download(url);
+            new Downloader(path).DownloadChapter(url);
         }
-    }
+    }*/
 }

@@ -10,15 +10,16 @@ namespace MangaInUaDownloader
     {
         private const string miu = "https://manga.in.ua";
         private const string ALT = "Альтернативний переклад";
+        public  const string UNTITLED = "Без назви";
     
         private static readonly Regex _ul = new(@"<ul class=""xfieldimagegallery.*ul>");
         private static readonly Regex _li = new(@"<li.*?src=""(.*?)"".*?li>");
         private static readonly Regex _chapters = new(@"<div id=""linkstocomics"".*>");
         private static readonly Regex _title = new(@".+ - (.+)");
 
-        public async Task<List<TranslatedChapters>> ListTranslators(Uri url)
+        public async Task<List<TranslatedChapters>> GetTranslatorsByChapter(Uri url)
         {
-            var html = await GetFullHTML(url.ToString()); // html with all chapters loaded
+            var html = await GetFullHTML(url.ToString(), "div.ltcitems"); // html with all chapters loaded
 
             var nodes = GetAllChapters(html);
             var chapters = nodes.Select(ParseAsChapter).OrderBy(m => m.Chapter).GroupBy(m => m.Chapter).ToDictionary(g => g.Key, g => g.ToList());
@@ -55,7 +56,7 @@ namespace MangaInUaDownloader
 
         public async Task<IEnumerable<MangaChapter>> GetChapters(Uri url, RangeF chapter, Range volume, string? translator, bool downloadOthers)
         {
-            var html = await GetFullHTML(url.ToString());
+            var html = await GetFullHTML(url.ToString(), "div.ltcitems");
             var nodes = GetAllChapters(html);
 
             var chapters = nodes
@@ -75,7 +76,7 @@ namespace MangaInUaDownloader
                 }
 
                 var title = _title.Match(c.Title).Groups[1].Value;
-                c.Title = string.IsNullOrEmpty(title) ? "Без назви" : title;
+                c.Title = string.IsNullOrEmpty(title) ? UNTITLED : title;
             }
             
             // download others + tr => group by chap > select g.where tr = x
@@ -100,7 +101,7 @@ namespace MangaInUaDownloader
             }
         }
 
-        private async Task<string> GetFullHTML(string url)
+        public static async Task<string> GetFullHTML(string url, string selector)
         {
             Console.WriteLine("Fetching browser...");
             using var browserFetcher = new BrowserFetcher();
@@ -113,7 +114,7 @@ namespace MangaInUaDownloader
             Console.WriteLine("Opening manga page...");
             await page.GoToAsync(url);
             Console.WriteLine("Loading chapters...");
-            await page.WaitForSelectorAsync("div.ltcitems");
+            await page.WaitForSelectorAsync(selector);
             return await page.GetContentAsync(); // html with all chapters loaded
         }
 

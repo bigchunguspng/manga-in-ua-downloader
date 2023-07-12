@@ -13,6 +13,8 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<int>     VolumeOption = new(     "--volume", () => int.MinValue, "Volume number.");
         public static readonly Option<int> FromVolumeOption = new("--from-volume", () => int.MinValue, "Number of the first volume to be downloaded.") { ArgumentHelpName = "volume" };
         public static readonly Option<int>   ToVolumeOption = new(  "--to-volume", () => int.MaxValue, "Number of the last volume to be downloaded.") { ArgumentHelpName = "volume" };
+
+        public static readonly Option<bool> ChapterFoldersOption = new("--cf", "Create a folder for each chapter.");
             
         public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Download only chapters translated by that translator.") { ArgumentHelpName = "name" };
         public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Choose chapters translated by that translator if there is a choice.") { ArgumentHelpName = "name" };
@@ -29,6 +31,7 @@ namespace MangaInUaDownloader.Commands
             Root.Add(VolumeOption);
             Root.Add(FromVolumeOption);
             Root.Add(ToVolumeOption);
+            Root.Add(ChapterFoldersOption);
             Root.Add(OnlyTranslatorOption);
             Root.Add(PreferTranslatorOption);
             Root.Add(ListTranslatorsOption);

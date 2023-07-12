@@ -20,10 +20,11 @@ namespace MangaInUaDownloader.Commands
         
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
+        private bool ChapterFolders;
         private string? Translator;
         private bool DownloadOtherTranslators;
         private bool ListTranslators;
-        private Uri URL;
+        private Uri? URL;
 
         private readonly MangaService _mangaService;
 
@@ -44,7 +45,8 @@ namespace MangaInUaDownloader.Commands
             Volume = context.ParseResult.GetValueForOption(RootCommandBuilder.VolumeOption);
             FromVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.FromVolumeOption);
             ToVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.ToVolumeOption);
-            
+
+            ChapterFolders = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterFoldersOption);
             ListTranslators = context.ParseResult.GetValueForOption(RootCommandBuilder.ListTranslatorsOption);
 
             var ot = context.ParseResult.GetValueForOption(RootCommandBuilder.OnlyTranslatorOption);
@@ -87,7 +89,7 @@ namespace MangaInUaDownloader.Commands
 
     public struct Range
     {
-        public int Min, Max;
+        public readonly int Min, Max;
 
         public Range(int min, int max)
         {
@@ -98,7 +100,7 @@ namespace MangaInUaDownloader.Commands
 
     public struct RangeF
     {
-        public float Min, Max;
+        public readonly float Min, Max;
 
         public RangeF(float min, float max)
         {

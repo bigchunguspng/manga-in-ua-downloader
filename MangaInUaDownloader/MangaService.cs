@@ -14,8 +14,8 @@ namespace MangaInUaDownloader
         private static readonly Regex _ul = new(@"<ul class=""xfieldimagegallery.*ul>");
         private static readonly Regex _li = new(@"<li.*?src=""(.*?)"".*?li>");
         private static readonly Regex _chapters = new(@"<div id=""linkstocomics"".*>");
-        private static readonly Regex _chapter = new(@"");
-        
+        private static readonly Regex _title = new(@".+ - (.+)");
+
         public async Task<List<TranslatedChapters>> ListTranslators(Uri url)
         {
             var html = await GetFullHTML(url.ToString()); // html with all chapters loaded
@@ -73,6 +73,9 @@ namespace MangaInUaDownloader
                     c.IsAlternative = true;
                     c.Title = chapters.First(x => x.Chapter.Equals(c.Chapter) && !x.Title.Contains(ALT)).Title;
                 }
+
+                var title = _title.Match(c.Title).Groups[1].Value;
+                c.Title = string.IsNullOrEmpty(title) ? "Без назви" : title;
             }
             
             // download others + tr => group by chap > select g.where tr = x

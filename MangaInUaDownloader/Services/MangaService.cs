@@ -16,14 +16,18 @@ namespace MangaInUaDownloader.Services
     
         private static readonly Regex _title = new(@".+ - (.+)");
 
-        public async Task<List<TranslatedChapters>> GetTranslatorsByChapter(Uri url)
+        public async Task<Dictionary<string, List<MangaChapter>>> GetTranslatorsByChapter(Uri url)
         {
-            var html = await GetFullHTML(url.ToString()); // html with all chapters loaded
-
+            var html = await GetFullHTML(url.ToString());
             var nodes = GetAllChapters(html);
-            var chapters = nodes.Select(ParseAsChapter).OrderBy(m => m.Chapter).GroupBy(m => m.Chapter).ToDictionary(g => g.Key, g => g.ToList());
 
-            var translations = new List<TranslatedChapters>();
+            var chapters = nodes.Select(ParseAsChapter).OrderBy(m => m.Chapter).ToList();
+            
+            FixNaming(chapters);
+
+            return chapters.GroupBy(g => g.Title).ToDictionary(g => g.Key, g => g.ToList());
+
+            /*var translations = new List<TranslatedChapters>();
             TranslatedChapters? dummy = null; // todo return mangachap list grouped by translators array
             foreach (var chapter in chapters)
             {
@@ -48,9 +52,26 @@ namespace MangaInUaDownloader.Services
                 };
             }
 
-            if (dummy is not null) translations.Add(dummy);
+            if (dummy is not null) translations.Add(dummy);*/
 
-            return translations;
+            //return chapters;
+        }
+
+        private void FixNaming(List<MangaChapter> chapters)
+        {
+            foreach (var c in chapters)
+            {
+                if (c.Title.Contains(ALT))
+                {
+                    c.IsAlternative = true;
+                    c.Title = chapters.First(x => x.Chapter.Equals(c.Chapter) && !x.Title.Contains(ALT)).Title;
+                }
+                else
+                {
+                    var title = _title.Match(c.Title).Groups[1].Value;
+                    c.Title = string.IsNullOrEmpty(title) ? UNTITLED : title;
+                }
+            }
         }
 
         public async Task<IEnumerable<MangaChapter>> GetChapters(Uri url, RangeF chapter, Range volume, string? translator, bool downloadOthers)
@@ -66,19 +87,7 @@ namespace MangaInUaDownloader.Services
                     x.Chapter >= chapter.Min &&  x.Chapter <= chapter.Max)
                 .ToList();
 
-            foreach (var c in chapters)
-            {
-                if (c.Title.Contains(ALT))
-                {
-                    c.IsAlternative = true;
-                    c.Title = chapters.First(x => x.Chapter.Equals(c.Chapter) && !x.Title.Contains(ALT)).Title;
-                }
-                else
-                {
-                    var title = _title.Match(c.Title).Groups[1].Value;
-                    c.Title = string.IsNullOrEmpty(title) ? UNTITLED : title;
-                }
-            }
+            FixNaming(chapters);
             
             // download others + tr => group by chap > select g.where tr = x
             // only tr? => select only where tr = tr

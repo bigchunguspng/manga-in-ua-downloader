@@ -1,6 +1,7 @@
 using System.CommandLine.Invocation;
 using MangaInUaDownloader.Services;
 using MangaInUaDownloader.Utils;
+using Spectre.Console;
 using Range = MangaInUaDownloader.Utils.Range;
 
 namespace MangaInUaDownloader.Commands
@@ -46,12 +47,30 @@ namespace MangaInUaDownloader.Commands
 
             if (ListTranslators)
             {
-                var translators = await _mangaService.GetTranslatorsByChapter(URL);
-                foreach (var x in translators)
+                var chapters = await _mangaService.GetTranslatorsByChapter(URL);
+                var table = new Table()
+                    .Border(TableBorder.Rounded)
+                    .BorderColor(Color.White)
+                    .AddColumn(new TableColumn("VOL").RightAligned())
+                    .AddColumn(new TableColumn("CH").RightAligned())
+                    .AddColumn(new TableColumn("TITLE"))
+                    .AddColumn(new TableColumn("TRANSLATED BY"))
+                    .AddColumn(new TableColumn("ALT"));
+                foreach (var title in chapters)
                 {
-                    var chap = x.ChapterA.Equals(x.ChapterB) ? $"{x.ChapterA}" : $"{x.ChapterA} - {x.ChapterB}";
-                    Console.WriteLine($"{chap}: {string.Join(" | ", x.Translators)}");
+                    var c = title.Value.First();
+                    var alt = title.Value.Count > 1 ? string.Join("; ", title.Value.Skip(1).Select(x => x.Translator)) : "";
+                    var style = c.Volume % 2 == 0 ? new Style(Color.Grey62) : new Style(Color.White);
+                    table.AddRow(
+                        new Text($"{c.Volume}", style), 
+                        new Text($"{c.Chapter}", style), 
+                        new Text(title.Key, style), 
+                        new Text(c.Translator, style), 
+                        new Text(alt, style));
+                    //var chap = x.ChapterA.Equals(x.ChapterB) ? $"{x.ChapterA}" : $"{x.ChapterA} - {x.ChapterB}";
+                    //Console.WriteLine($"{chap}: {string.Join(" | ", x.Translators)}");
                 }
+                AnsiConsole.Write(table);
 
                 return 0;
             }

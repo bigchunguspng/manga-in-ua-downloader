@@ -13,8 +13,14 @@ namespace MangaInUaDownloader.Services
         private const string ALT = "Альтернативний переклад";
         private const string XPATH_CHAPTERS = "//div[@id='linkstocomics']//div[@class='ltcitems']";
         public  const string UNTITLED = "(Без назви)";
+        
+        private static readonly Regex _chapter_url  = new(@"^https?:\/\/manga\.in\.ua\/chapters\/\S+");
+        private static readonly Regex   _manga_url  = new(@"^https?:\/\/manga\.in\.ua\/mangas\/\S+");
     
         private static readonly Regex _title = new(@".+ - (.+)");
+
+        public bool IsChapterURL(string url) => _chapter_url.IsMatch(url);
+        public bool   IsMangaURL(string url) =>   _manga_url.IsMatch(url);
 
         public async Task<Dictionary<string, List<MangaChapter>>> GetTranslatorsByChapter(Uri url)
         {
@@ -26,35 +32,6 @@ namespace MangaInUaDownloader.Services
             FixNaming(chapters);
 
             return chapters.GroupBy(g => g.Title).ToDictionary(g => g.Key, g => g.ToList());
-
-            /*var translations = new List<TranslatedChapters>();
-            TranslatedChapters? dummy = null; // todo return mangachap list grouped by translators array
-            foreach (var chapter in chapters)
-            {
-                if (dummy is null)
-                {
-                    dummy = ThisChapter();
-                }
-                else if (dummy.Translators.SequenceEqual(chapter.Value.Select(c => c.Translator)))
-                {
-                    dummy.ChapterB = chapter.Key;
-                }
-                else
-                {
-                    translations.Add(dummy);
-                    dummy = ThisChapter();
-                }
-                
-                TranslatedChapters ThisChapter() => new()
-                {
-                    ChapterA = chapter.Key, ChapterB = chapter.Key,
-                    Translators = chapter.Value.Select(c => c.Translator).ToArray()
-                };
-            }
-
-            if (dummy is not null) translations.Add(dummy);*/
-
-            //return chapters;
         }
 
         private void FixNaming(List<MangaChapter> chapters)

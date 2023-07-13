@@ -15,10 +15,11 @@ namespace MangaInUaDownloader
         private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
         private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
 
-        private static readonly Regex _chapter_url  = new(@"https?:\/\/manga\.in\.ua\/chapters\/\S+");
+        private readonly Regex _title = new(@"Том: (.+)\. Розділ: (.+?) .+");
 
         private readonly bool _chapterize;
         private int page_number;
+        private string? chapter_number;
 
         public Downloader(bool chapterize) => _chapterize = chapterize;
         
@@ -29,43 +30,69 @@ namespace MangaInUaDownloader
             foreach (var volume in volumes)
             {
                 ResetPageCount();
-                
-                var volumeDir = Directory.CreateDirectory($"Том {volume.Key}").Name;
+
+                var volumePath = CreateVolumePath(volume.Key);
                 foreach (var chapter in volume.Value)
                 {
                     if (_chapterize)
                     {
-                        var title = chapter.Title == MangaService.UNTITLED
-                            ? $"Розділ {chapter.Chapter}"
-                            : $"Розділ {chapter.Chapter} - {chapter.Title}";
-                        var chapterDir = Path.Combine(volumeDir, title);
-                        Directory.CreateDirectory(chapterDir);
-                        await DownloadChapter(chapter, chapterDir);
+                        await DownloadChapter(chapter, CreateChapterPath(chapter, volumePath));
                         
                         ResetPageCount();
                     }
                     else
                     {
-                        await DownloadChapter(chapter, volumeDir);
+                        chapter_number = $"{chapter.Chapter}";
+                        await DownloadChapter(chapter, volumePath);
                     }
                 }
             }
         }
 
-        private void ResetPageCount() => page_number = 1;
+        private string CreateVolumePath(int i) => Directory.CreateDirectory($"Том {i}").Name;
 
-        private async Task DownloadChapter(MangaChapter chapter, string path)
+        private string CreateChapterPath(MangaChapter chapter, string volumePath)
+        {
+            var title = chapter.Title == MangaService.UNTITLED
+                ? $"Розділ {chapter.Chapter}"
+                : $"Розділ {chapter.Chapter} - {chapter.Title}";
+            var chapterPath = Path.Combine(volumePath, title);
+            Directory.CreateDirectory(chapterPath);
+            return chapterPath;
+        }
+
+        private void ResetPageCount() => page_number = 1;
+        
+        public async Task DownloadChapter(MangaChapter chapter, string path)
         {
             var html = await GetFullHTML(chapter.URL);
             var pages = ScrapService.Instance.GetHTMLNodes(html, XPATH_PAGES, "Collecting pages...");
 
+            if (chapter.Volume < 0)
+            {
+                // get name and shit
+                var title = ScrapService.Instance.GetHTMLNode(html, "//head//title").InnerText;
+                var match = _title.Match(title);
+                chapter.Volume = Convert.ToInt32(match.Groups[1].Value);
+                chapter.Chapter = Convert.ToSingle(match.Groups[2].Value);
+                var v = CreateVolumePath(chapter.Volume);
+                path = _chapterize ? CreateChapterPath(chapter, v) : v;
+                chapter_number = $"{chapter.Chapter}";
+            }
+
             var links = pages.Select(node => node.Attributes["data-src"].Value).ToList();
 
+            DownloadPages(links, path);
+        }
+
+        private void DownloadPages(List<string> links, string path)
+        {
             using var client = new WebClient();
             foreach (var link in links)
             {
                 var number = page_number++.ToString().PadLeft(_chapterize ? 2 : 3, '0');
-                var output = Path.Combine(path, $"{number}{Path.GetExtension(link)}");
+                var prefix = _chapterize ? "" : $"{chapter_number} - ";
+                var output = Path.Combine(path, $"{prefix}{number}{Path.GetExtension(link)}");
                 client.DownloadFile(link, output);
                 Console.WriteLine($"[downloaded] \"{output}\"");
             }

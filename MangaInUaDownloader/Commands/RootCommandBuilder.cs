@@ -20,10 +20,10 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Download only chapters translated by that translator.") { ArgumentHelpName = "name" };
         public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Choose chapters translated by that translator if there is a choice.") { ArgumentHelpName = "name" };
 
-        public static readonly Option<bool> ListTranslatorsOption = new("--list-translators", "Show who translated which chapters.");
-        public static readonly Option<bool>    ListChaptersOption = new("--list-chapters", "Show chapters selected by given query (DEBUG OPTION).") { IsHidden = true };
+        public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Show all chapters.");
+        public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Show chapters selected by given query (DEBUG OPTION).") { IsHidden = true };
 
-        public static readonly Argument<Uri> URLArg = new("Manga URL, e.g: https://manga.in.ua/mangas/...html.");
+        public static readonly Argument<Uri> URLArg = new("Manga or chapter URL, e.g: https://manga.in.ua/...html.");
 
         private static void AddAliases()
         {
@@ -40,8 +40,8 @@ namespace MangaInUaDownloader.Commands
             OnlyTranslatorOption.AddAlias("-o");
             PreferTranslatorOption.AddAlias("-p");
             
-            ListTranslatorsOption.AddAlias("-l");
-            ListChaptersOption.AddAlias("-list");
+            ListChaptersOption.AddAlias("-l");
+            ListSelectedOption.AddAlias("-ls");
         }
 
         public static RootCommand Build()
@@ -57,8 +57,8 @@ namespace MangaInUaDownloader.Commands
             Root.Add(ChapterizeOption);
             Root.Add(OnlyTranslatorOption);
             Root.Add(PreferTranslatorOption);
-            Root.Add(ListTranslatorsOption);
             Root.Add(ListChaptersOption);
+            Root.Add(ListSelectedOption);
 
             Root.AddArgument(URLArg);
 

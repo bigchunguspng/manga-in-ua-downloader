@@ -101,7 +101,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             }
             else return 1;
 
-            ScrapService.Instance.Dispose();
+            //ScrapService.Instance.Dispose();
             
             return 0;
         }

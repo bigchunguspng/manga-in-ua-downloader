@@ -24,6 +24,10 @@ namespace MangaInUaDownloader
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
+            Console.WriteLine(new MangaInUaService().GetMangaTitle("https://manga.in.ua/chapters/42053-stvorenij-u-bezodni-tom-1-rozdil-3.html"));
+
+            return 0;
+
             var list = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
             var handler = new RootCommandHandler().WithTheseSubhandlers(list);
             var command = RootCommandBuilder.Build(handler);

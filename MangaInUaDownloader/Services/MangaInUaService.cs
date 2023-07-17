@@ -9,10 +9,12 @@ namespace MangaInUaDownloader.Services
         private const string ALT = "Альтернативний переклад";
         private const string XPATH_CHAPTERS = "//div[@id='linkstocomics']//div[@class='ltcitems']";
         private const string XPATH_PAGES = "//div[@id='comics']//ul[@class='xfieldimagegallery loadcomicsimages']//li//img";
+        private const string XPATH_TITLE = "//div[@id='site-content']//div[@class='youreadnow']";
         private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
         private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
 
         private readonly Regex _title_xd = new(@"Том: (.+)\. Розділ: (.+?) .+");
+        private readonly Regex _manga_title = new(@"Читати: (.+?) - ");
 
 
 
@@ -20,7 +22,7 @@ namespace MangaInUaDownloader.Services
         public bool   IsMangaURL(string url) => Regex.IsMatch(url, @"^https?:\/\/manga\.in\.ua\/mangas\/\S+");
         
     
-        private static readonly Regex _title = new(@".+ - (.+)");
+        private static readonly Regex _chapter_title = new(@".+ - (.+)");
 
         public async Task<Dictionary<string, List<MangaChapter>>> GetChaptersGrouped(string url)
         {
@@ -45,7 +47,7 @@ namespace MangaInUaDownloader.Services
                 }
                 else
                 {
-                    var title = _title.Match(c.Title).Groups[1].Value;
+                    var title = _chapter_title.Match(c.Title).Groups[1].Value;
                     c.Title = string.IsNullOrEmpty(title) ? MangaService.UNTITLED : title;
                 }
             }
@@ -107,7 +109,14 @@ namespace MangaInUaDownloader.Services
 
             return pages.Select(node => node.Attributes["data-src"].Value).ToList();
         }
-        
+
+        public string GetMangaTitle(string url)
+        {
+            var html = ScrapService.Instance.GetPlainHTML(url);
+            var node = ScrapService.Instance.GetHTMLNode(html, XPATH_TITLE);
+
+            return _manga_title.Match(node.InnerText).Groups[1].Value;
+        }
         
         
         private async Task<string> GetChapterPageHTML(string url)

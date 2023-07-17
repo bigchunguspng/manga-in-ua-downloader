@@ -12,7 +12,7 @@ namespace MangaInUaDownloader
         public Task DownloadChapter(MangaChapter chapter, string path);
     }
     
-    public class ImageDownloader : MangaDownloader
+    public class ImageDownloader : MangaDownloader // should know nothing about no manga sites!!!!!
     {
 
         private readonly bool _chapterize, _directory;

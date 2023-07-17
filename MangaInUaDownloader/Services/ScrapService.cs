@@ -23,6 +23,8 @@ namespace MangaInUaDownloader.Services
             Console.WriteLine("Launching browser...");
             var pup = new PuppeteerExtra().Use(new StealthPlugin());
             _browser = await pup.LaunchAsync(new LaunchOptions { Headless = false });
+            
+            AppDomain.CurrentDomain.ProcessExit += CloseBrowser;
         }
 
         private async Task FetchBrowser()
@@ -76,16 +78,20 @@ namespace MangaInUaDownloader.Services
             return doc.DocumentNode.SelectNodes(selector);
         }
 
-        public HtmlNode GetHTMLNode(string html, string selector)
+        public HtmlNode GetHTMLNode(HtmlDocument html, string selector)
         {
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            return doc.DocumentNode.SelectSingleNode(selector);
+            return html.DocumentNode.SelectSingleNode(selector);
         }
 
-        public void Dispose()
+        /// <summary> Returns an HTML code of a page without loading any JS garbage. </summary>
+        public HtmlDocument GetPlainHTML(string url)
         {
+            return new HtmlWeb().Load(url);
+        }
+
+        private void CloseBrowser(object? sender, EventArgs e)
+        {
+            Console.WriteLine("Closing browser...");
             _browser?.DisposeAsync();
         }
     }

@@ -7,22 +7,33 @@ using MangaInUaDownloader.Services;
 
 namespace MangaInUaDownloader
 {
-    public class Downloader
+    public interface MangaDownloader
     {
-        private const string miu = "https://manga.in.ua";
-
+        public Task DownloadChapters(IEnumerable<MangaChapter> chapters);
+        public Task DownloadChapter(MangaChapter chapter, string path);
+    }
+    
+    public class ImageDownloader : MangaDownloader
+    {
         private const string XPATH_PAGES = "//div[@id='comics']//ul[@class='xfieldimagegallery loadcomicsimages']//li//img";
         private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
         private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
 
         private readonly Regex _title = new(@"Том: (.+)\. Розділ: (.+?) .+");
 
-        private readonly bool _chapterize;
+        private readonly bool _chapterize, _directory;
+        private readonly MangaService _mangaService;
         private int page_number;
         private string? chapter_number;
 
-        public Downloader(bool chapterize) => _chapterize = chapterize;
-        
+        public ImageDownloader(bool chapterize) => _chapterize = chapterize;
+
+        public ImageDownloader(bool chapterize, bool directory, MangaService mangaService)
+        {
+            _chapterize = chapterize;
+            _directory = directory;
+            _mangaService = mangaService;
+        }
 
         public async Task DownloadChapters(IEnumerable<MangaChapter> chapters)
         {

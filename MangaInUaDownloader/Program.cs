@@ -2,6 +2,8 @@
 using System.CommandLine.Parsing;
 using System.Globalization;
 using MangaInUaDownloader.Commands;
+using MangaInUaDownloader.MangaRequestHandlers;
+using MangaInUaDownloader.Services;
 
 // miu-dl [-o "Title\Chapter"] URL-chapter
 // miu-dl [--translators-list] URL-title // out: ch A - B: tr.1 \n ch C - D: tr.1, tr.2 ...
@@ -21,9 +23,11 @@ namespace MangaInUaDownloader
             Console. InputEncoding = System.Text.Encoding.Unicode;
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-            
-            var root = RootCommandBuilder.Build();
-            var parser = new CommandLineBuilder(root).UseDefaults().Build();
+
+            var list = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
+            var handler = new RootCommandHandler().WithTheseSubhandlers(list);
+            var command = RootCommandBuilder.Build(handler);
+            var parser  = new CommandLineBuilder(command).UseDefaults().Build();
 
             return await parser.InvokeAsync(args);
             

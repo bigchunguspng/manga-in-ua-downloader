@@ -1,5 +1,5 @@
 using System.CommandLine;
-using MangaInUaDownloader.Services;
+using System.CommandLine.Invocation;
 
 namespace MangaInUaDownloader.Commands
 {
@@ -15,6 +15,7 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<int> FromVolumeOption = new("--from-volume", () => int.MinValue, "Number of the first volume to be downloaded.") { ArgumentHelpName = "volume" };
         public static readonly Option<int>   ToVolumeOption = new(  "--to-volume", () => int.MaxValue, "Number of the last volume to be downloaded.") { ArgumentHelpName = "volume" };
 
+        public static readonly Option<bool>  DirectoryOption = new("--directory", "Create a new folder for this title.");
         public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Create a folder for each chapter.");
             
         public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Download only chapters translated by that translator.") { ArgumentHelpName = "name" };
@@ -35,6 +36,8 @@ namespace MangaInUaDownloader.Commands
             FromVolumeOption.AddAlias("-F");
             ToVolumeOption.AddAlias("-T");
             
+            DirectoryOption.AddAlias("-d");
+            
             ChapterizeOption.AddAlias("-s");
             
             OnlyTranslatorOption.AddAlias("-o");
@@ -44,7 +47,7 @@ namespace MangaInUaDownloader.Commands
             ListSelectedOption.AddAlias("-ls");
         }
 
-        public static RootCommand Build()
+        public static RootCommand Build(ICommandHandler handler)
         {
             AddAliases();
             
@@ -54,6 +57,7 @@ namespace MangaInUaDownloader.Commands
             Root.Add(VolumeOption);
             Root.Add(FromVolumeOption);
             Root.Add(ToVolumeOption);
+            Root.Add(DirectoryOption);
             Root.Add(ChapterizeOption);
             Root.Add(OnlyTranslatorOption);
             Root.Add(PreferTranslatorOption);
@@ -61,8 +65,6 @@ namespace MangaInUaDownloader.Commands
             Root.Add(ListSelectedOption);
 
             Root.AddArgument(URLArg);
-
-            var handler = new RootCommandHandler(new MangaService());
 
             Root.SetHandler(handler.InvokeAsync);
 

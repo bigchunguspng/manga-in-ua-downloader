@@ -1,4 +1,6 @@
 using HtmlAgilityPack;
+using PuppeteerExtraSharp;
+using PuppeteerExtraSharp.Plugins.ExtraStealth;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
 
@@ -6,6 +8,8 @@ namespace MangaInUaDownloader.Services
 {
     public class ScrapService
     {
+        private const string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0";
+        
         public static readonly ScrapService Instance = new();
 
         private IBrowser? _browser; // todo dispose after all
@@ -17,7 +21,8 @@ namespace MangaInUaDownloader.Services
             await FetchBrowser();
             
             Console.WriteLine("Launching browser...");
-            _browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+            var pup = new PuppeteerExtra().Use(new StealthPlugin());
+            _browser = await pup.LaunchAsync(new LaunchOptions { Headless = false });
         }
 
         private async Task FetchBrowser()
@@ -32,6 +37,7 @@ namespace MangaInUaDownloader.Services
             Console.WriteLine($"Opening {what} page...");
             var page = await _browser!.NewPageAsync();
 
+            await page.SetUserAgentAsync(USER_AGENT);
             await page.GoToAsync(url);
 
             return page;

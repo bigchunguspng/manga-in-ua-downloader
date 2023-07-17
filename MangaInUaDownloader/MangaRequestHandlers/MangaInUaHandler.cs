@@ -76,7 +76,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             }
             else if (ListChapters)
             {
-                var chapters = await _mangaService.GetTranslatorsByChapter(URL);
+                var chapters = await _mangaService.GetChaptersGrouped(URL);
                 var table = new Table()
                     .Border(TableBorder.Rounded)
                     .BorderColor(Color.White)

@@ -1,24 +1,28 @@
 namespace MangaInUaDownloader.Utils
 {
-    public struct Range
+    public readonly struct Range
     {
-        public readonly int Min, Max;
+        private readonly int Min, Max;
 
         public Range(int min, int max)
         {
             Min = min;
             Max = max;
         }
+
+        public bool Contains(int x) => x >= Min && x <= Max;
     }
     
-    public struct RangeF
+    public readonly struct RangeF
     {
-        public readonly float Min, Max;
+        private readonly float Min, Max;
 
         public RangeF(float min, float max)
         {
             Min = min;
             Max = max;
         }
+        
+        public bool Contains(float x) => x >= Min && x <= Max;
     }
 }

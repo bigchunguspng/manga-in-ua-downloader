@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.RegularExpressions;
 using MangaInUaDownloader.Model;
 using MangaInUaDownloader.Services;
 
@@ -15,11 +14,6 @@ namespace MangaInUaDownloader
     
     public class ImageDownloader : MangaDownloader
     {
-        private const string XPATH_PAGES = "//div[@id='comics']//ul[@class='xfieldimagegallery loadcomicsimages']//li//img";
-        private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
-        private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
-
-        private readonly Regex _title = new(@"Том: (.+)\. Розділ: (.+?) .+");
 
         private readonly bool _chapterize, _directory;
         private readonly MangaService _mangaService;
@@ -76,22 +70,7 @@ namespace MangaInUaDownloader
         
         public async Task DownloadChapter(MangaChapter chapter, string path)
         {
-            var html = await GetFullHTML(chapter.URL);
-            var pages = ScrapService.Instance.GetHTMLNodes(html, XPATH_PAGES, "Collecting pages...");
-
-            if (chapter.Volume < 0)
-            {
-                // get name and shit
-                var title = ScrapService.Instance.GetHTMLNode(html, "//head//title").InnerText;
-                var match = _title.Match(title);
-                chapter.Volume = Convert.ToInt32(match.Groups[1].Value);
-                chapter.Chapter = Convert.ToSingle(match.Groups[2].Value);
-                var v = CreateVolumePath(chapter.Volume);
-                path = _chapterize ? CreateChapterPath(chapter, v) : v;
-                chapter_number = $"{chapter.Chapter}";
-            }
-
-            var links = pages.Select(node => node.Attributes["data-src"].Value).ToList();
+            var links = await _mangaService.GetChapterPages(chapter.URL);
 
             DownloadPages(links, path);
         }
@@ -107,16 +86,6 @@ namespace MangaInUaDownloader
                 client.DownloadFile(link, output);
                 Console.WriteLine($"[downloaded] \"{output}\"");
             }
-        }
-
-        private async Task<string> GetFullHTML(string url)
-        {
-            var page = await ScrapService.Instance.OpenWebPageAsync(url, "chapter");
-            
-            await ScrapService.Instance.Click(page, SELECTOR_BUTTON);
-            await ScrapService.Instance.LoadElement(page, SELECTOR_UL, "pages");
-            
-            return await ScrapService.Instance.GetContent(page);
         }
     }
 }

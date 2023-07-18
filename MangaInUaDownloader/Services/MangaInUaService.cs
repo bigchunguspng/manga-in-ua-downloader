@@ -69,7 +69,7 @@ namespace MangaInUaDownloader.Services
             
             if (options.Translator is not null)
             {
-                if (options.DownloadOthers) // todo IgnoreOthers
+                if (options.DownloadOthers)
                 {
                     return chapters
                         .GroupBy(x => x.Chapter)
@@ -118,7 +118,7 @@ namespace MangaInUaDownloader.Services
             {
                 Volume  = Convert.ToInt32 (match.Groups[1].Value),
                 Chapter = Convert.ToSingle(match.Groups[2].Value),
-                Title = match.Groups.Count >= 3 ? match.Groups[3].Value : MangaService.UNTITLED
+                Title = match.Groups[3].Success ? match.Groups[3].Value : MangaService.UNTITLED
             };
         }
 

@@ -92,15 +92,14 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 // path
                 var root = MakeDirectory ? await _mangaService.GetMangaTitle(URL) : "";
 
-                var downloading = new List<Task>(chapters.Count);
-                // get each chapter pages and run the task
                 var volumes = chapters.GroupBy(x => x.Volume);
+                var downloading = new List<Task>(chapters.Count);
                 foreach (var volume in volumes)
                 {
                     var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
                     foreach (var chapter in volume)
                     {
-                        var path = Path.Combine(vol, ChapterDirectoryName(chapter));
+                        var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
                         var pages = await _mangaService.GetChapterPages(chapter.URL);
                         var task = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run();
                         downloading.Add(task);
@@ -150,13 +149,13 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 ? $"Розділ {chapter.Chapter}"
                 : $"Розділ {chapter.Chapter} - {chapter.Title}";
 
-            return ReplaceIllegalCharacters(name);
+            return RemoveIllegalCharacters(name);
         }
 
-        private static string ReplaceIllegalCharacters(string path, char x = '#')
+        private static string RemoveIllegalCharacters(string path)
         {
             var chars = Path.GetInvalidFileNameChars();
-            return chars.Aggregate(path, (current, c) => current.Replace(c, x));
+            return chars.Aggregate(path, (current, c) => current.Replace(c.ToString(), ""));
         }
     }
 }

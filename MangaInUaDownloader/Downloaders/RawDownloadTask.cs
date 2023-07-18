@@ -9,25 +9,25 @@ namespace MangaInUaDownloader.Downloaders
     {
         private int page;
 
-        private readonly bool _chapterize;
-
-        public RawDownloadTask(List<string> links, string path, float chapter, bool chapterize) : base(links, path, chapter)
-        {
-            _chapterize = chapterize;
-        }
+        public RawDownloadTask(List<string> links, string path, float chapter, bool chapterize) : base(links, path, chapter, chapterize) { }
         
         public override async Task Run()
         {
-            Directory.CreateDirectory(Location);
+            Location = Directory.CreateDirectory(Location).FullName;
+            
             using var client = new WebClient();
             foreach (var link in Links)
             {
-                var number = page++.ToString().PadLeft(_chapterize ? 2 : 3, '0');
-                var prefix = _chapterize ? "" : $"{Chapter} - ";
-                var output = Path.Combine(Location, $"{prefix}{number}{Path.GetExtension(link)}");
+                var number = Chapterize ? PageNumber() : ChapterPageNumber();
+                var output = Path.Combine(RelativePath(), $"{number}{Path.GetExtension(link)}");
                 await client.DownloadFileTaskAsync(link, output);
                 Console.WriteLine($"[downloaded] \"{output}\"");
             }
         }
+
+        private string RelativePath() => Path.GetRelativePath(Environment.CurrentDirectory, Location);
+
+        private string ChapterPageNumber() => $"{Chapter} - {(++page).ToString().PadLeft(3, '0')}";
+        private string        PageNumber() =>                (++page).ToString().PadLeft(2, '0');
     }
 }

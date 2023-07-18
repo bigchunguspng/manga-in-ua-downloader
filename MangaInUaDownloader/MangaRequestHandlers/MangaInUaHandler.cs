@@ -100,7 +100,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                     foreach (var chapter in volume)
                     {
                         var path = Path.Combine(vol, ChapterDirectoryName(chapter));
-                        var pages = await _mangaService.GetChapterPages(URL);
+                        var pages = await _mangaService.GetChapterPages(chapter.URL);
                         var task = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run();
                         downloading.Add(task);
                     }

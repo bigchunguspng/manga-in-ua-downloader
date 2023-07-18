@@ -15,35 +15,35 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<int> FromVolumeOption = new("--from-volume", () => int.MinValue, "Number of the first volume to be downloaded.") { ArgumentHelpName = "volume" };
         public static readonly Option<int>   ToVolumeOption = new(  "--to-volume", () => int.MaxValue, "Number of the last volume to be downloaded.") { ArgumentHelpName = "volume" };
 
-        public static readonly Option<bool>  DirectoryOption = new("--directory", "Create a new folder for this title.");
-        public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Create a folder for each chapter.");
+        public static readonly Option<bool>  DirectoryOption = new("--directory", "Create a new folder for this title."); // todo replace with UseThisDir
+        public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Create a separate folder for each chapter.");
             
         public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Download only chapters translated by that translator.") { ArgumentHelpName = "name" };
         public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Choose chapters translated by that translator if there is a choice.") { ArgumentHelpName = "name" };
 
         public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Show all chapters.");
-        public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Show chapters selected by given query (DEBUG OPTION).") { IsHidden = true };
+        public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Show chapters selected by given query (DEBUG OPTION).");
 
         public static readonly Argument<Uri> URLArg = new("Manga or chapter URL, e.g: https://manga.in.ua/...html.");
 
         private static void AddAliases()
         {
             ChapterOption.AddAlias("-c");
-            FromChapterOption.AddAlias("-f");
-            ToChapterOption.AddAlias("-t");
+            FromChapterOption.AddAlias("-fc");
+            ToChapterOption.AddAlias("-tc");
             
             VolumeOption.AddAlias("-v");
-            FromVolumeOption.AddAlias("-F");
-            ToVolumeOption.AddAlias("-T");
+            FromVolumeOption.AddAlias("-fv");
+            ToVolumeOption.AddAlias("-tv");
             
             DirectoryOption.AddAlias("-d");
             
             ChapterizeOption.AddAlias("-s");
             
-            OnlyTranslatorOption.AddAlias("-o");
-            PreferTranslatorOption.AddAlias("-p");
+            OnlyTranslatorOption.AddAlias("-ot");
+            PreferTranslatorOption.AddAlias("-pt");
             
-            ListChaptersOption.AddAlias("-l");
+            ListChaptersOption.AddAlias("-lc");
             ListSelectedOption.AddAlias("-ls");
         }
 

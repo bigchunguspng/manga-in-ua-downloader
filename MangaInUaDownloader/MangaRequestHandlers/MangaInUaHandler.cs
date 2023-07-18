@@ -17,7 +17,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
-        private bool Directory, Chapterize;
+        private bool MakeDirectory, Chapterize;
         private string? Translator;
         private bool DownloadOtherTranslators;
         private bool ListChapters, ListSelected;
@@ -41,7 +41,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             FromVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.FromVolumeOption);
             ToVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.ToVolumeOption);
 
-            Directory = context.ParseResult.GetValueForOption(RootCommandBuilder.DirectoryOption);
+            MakeDirectory = context.ParseResult.GetValueForOption(RootCommandBuilder.DirectoryOption);
             Chapterize = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterizeOption);
             ListChapters = context.ParseResult.GetValueForOption(RootCommandBuilder.ListChaptersOption);
             ListSelected = context.ParseResult.GetValueForOption(RootCommandBuilder.ListSelectedOption);
@@ -53,26 +53,63 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             
             if    (_mangaService.IsChapterURL(URL))
             {
-                var downloader = new ImageDownloader(Chapterize, Directory, _mangaService);
-                await downloader.DownloadChapter(new MangaChapter { Volume = int.MinValue, URL = URL}, "");
+                // call service to get a list of pages urls (and a title if ness)
+                var pages = await _mangaService.GetChapterPages(URL);
+                var chapter = await _mangaService.GetChapterDetails(URL);
+                
+                // prepare the path
+                var path = VolumeDirectoryName(chapter.Volume);
+                if (MakeDirectory) // /Title/Том 1/...
+                {
+                    var title = await _mangaService.GetMangaTitle(URL);
+                    path = Path.Combine(title, path);
+                }
+                if (Chapterize) // ../Том 1/Розділ 8/... 
+                {
+                    path = Path.Combine(path, ChapterDirectoryName(chapter));
+                }
+                
+                // pass the shit to dl
+                var task = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize);
+                await task.Run();
             }
-            else if (_mangaService.IsMangaURL(URL))
+            else if (_mangaService.IsMangaURL(URL) && !ListChapters)
             {
                 var c = Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter);
                 var v = Volume  < 0 ? new Range (FromVolume,  ToVolume ) : new Range (Volume,  Volume );
 
                 var options = new MangaDownloadOptions(c, v, Translator, DownloadOtherTranslators);
                 var chapters = (await _mangaService.GetChapters(URL, options)).ToList();
-                foreach (var chapter in chapters)
+
+                foreach (var chapter in chapters.ToList()) // cw
                 {
                     Console.WriteLine($"Vol. {chapter.Volume} Ch. {chapter.Chapter} {chapter.Title} (by {chapter.Translator}{(chapter.IsAlternative ? " (ALT)" : "")})");
                 }
 
-                if (!ListSelected)
+                if (ListSelected) return 0;
+                
+                // path
+                var root = MakeDirectory ? await _mangaService.GetMangaTitle(URL) : "";
+
+                var downloading = new List<Task>(chapters.Count);
+                // get each chapter pages and run the task
+                var volumes = chapters.GroupBy(x => x.Volume);
+                foreach (var volume in volumes)
                 {
-                    var downloader = new ImageDownloader(Chapterize);
-                    await downloader.DownloadChapters(chapters);
+                    var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
+                    foreach (var chapter in volume)
+                    {
+                        var path = Path.Combine(vol, ChapterDirectoryName(chapter));
+                        var pages = await _mangaService.GetChapterPages(URL);
+                        var task = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run();
+                        downloading.Add(task);
+                    }
                 }
+
+                // await all tasks
+                await Task.WhenAll(downloading);
+                // cw some shit idk
+                Console.WriteLine("done!");
             }
             else if (ListChapters)
             {
@@ -101,9 +138,24 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             }
             else return 1;
 
-            //ScrapService.Instance.Dispose();
-            
             return 0;
+        }
+        
+        private string VolumeDirectoryName(int i) => $"Том {i}";
+
+        private string ChapterDirectoryName(MangaChapter chapter)
+        {
+            var name = chapter.Title == MangaService.UNTITLED
+                ? $"Розділ {chapter.Chapter}"
+                : $"Розділ {chapter.Chapter} - {chapter.Title}";
+
+            return ReplaceIllegalCharacters(name);
+        }
+
+        private static string ReplaceIllegalCharacters(string path, char x = '#')
+        {
+            var chars = Path.GetInvalidFileNameChars();
+            return chars.Aggregate(path, (current, c) => current.Replace(c, x));
         }
     }
 }

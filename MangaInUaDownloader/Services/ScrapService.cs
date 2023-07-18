@@ -78,6 +78,13 @@ namespace MangaInUaDownloader.Services
             return doc.DocumentNode.SelectNodes(selector);
         }
 
+        public HtmlNode GetHTMLNode(string html, string selector)
+        {
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+            
+            return doc.DocumentNode.SelectSingleNode(selector);
+        }
         public HtmlNode GetHTMLNode(HtmlDocument html, string selector)
         {
             return html.DocumentNode.SelectSingleNode(selector);

@@ -15,7 +15,7 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<int> FromVolumeOption = new("--from-volume", () => int.MinValue, "Number of the first volume to be downloaded.") { ArgumentHelpName = "volume" };
         public static readonly Option<int>   ToVolumeOption = new(  "--to-volume", () => int.MaxValue, "Number of the last volume to be downloaded.") { ArgumentHelpName = "volume" };
 
-        public static readonly Option<bool>  DirectoryOption = new("--directory", "Create a new folder for this title."); // todo replace with UseThisDir
+        public static readonly Option<bool>  DirectoryOption = new("--directory", "Use this option if you are already in the title's folder.");
         public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Create a separate folder for each chapter.");
             
         public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Download only chapters translated by that translator.") { ArgumentHelpName = "name" };

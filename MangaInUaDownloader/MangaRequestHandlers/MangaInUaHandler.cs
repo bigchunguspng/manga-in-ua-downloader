@@ -42,7 +42,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             FromVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.FromVolumeOption);
             ToVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.ToVolumeOption);
 
-            MakeDirectory = context.ParseResult.GetValueForOption(RootCommandBuilder.DirectoryOption);
+            MakeDirectory = !context.ParseResult.GetValueForOption(RootCommandBuilder.DirectoryOption);
             Chapterize = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterizeOption);
             ListChapters = context.ParseResult.GetValueForOption(RootCommandBuilder.ListChaptersOption);
             ListSelected = context.ParseResult.GetValueForOption(RootCommandBuilder.ListSelectedOption);

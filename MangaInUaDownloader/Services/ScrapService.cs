@@ -85,10 +85,6 @@ namespace MangaInUaDownloader.Services
             
             return doc.DocumentNode.SelectSingleNode(selector);
         }
-        public HtmlNode GetHTMLNode(HtmlDocument html, string selector)
-        {
-            return html.DocumentNode.SelectSingleNode(selector);
-        }
 
         /// <summary> Returns an HTML code of a page without loading any JS garbage. </summary>
         public HtmlDocument GetPlainHTML(string url)

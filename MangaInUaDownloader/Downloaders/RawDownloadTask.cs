@@ -2,25 +2,9 @@ using System.Net;
 
 #pragma warning disable SYSLIB0014
 
-namespace MangaInUaDownloader
+namespace MangaInUaDownloader.Downloaders
 {
-    public abstract class DownloadTask
-    {
-        protected readonly List<string> Links;
-        protected readonly string Location;
-        protected readonly float Chapter;
-
-        protected DownloadTask(List<string> links, string path, float chapter)
-        {
-            Links = links;
-            Location = path;
-            Chapter = chapter;
-        }
-
-        public abstract Task Run();
-    }
-
-    /// <summary> Downloads all chapter's pages to a specified location. </summary>
+    /// <summary> Downloads all chapter's pages to a specified location in a raw format. </summary>
     public class RawDownloadTask : DownloadTask
     {
         private int page;

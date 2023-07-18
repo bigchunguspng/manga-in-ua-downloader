@@ -1,6 +1,7 @@
 using System.CommandLine.Invocation;
 using System.Text.RegularExpressions;
 using MangaInUaDownloader.Commands;
+using MangaInUaDownloader.Downloaders;
 using MangaInUaDownloader.Model;
 using MangaInUaDownloader.Services;
 using MangaInUaDownloader.Utils;

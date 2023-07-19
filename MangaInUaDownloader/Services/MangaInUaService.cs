@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MangaInUaDownloader.Model;
+using MangaInUaDownloader.Utils.ConsoleExtensions;
 
 namespace MangaInUaDownloader.Services
 {
@@ -25,10 +26,10 @@ namespace MangaInUaDownloader.Services
     
         private static readonly Regex _chapter_title = new(@".+ - (.+)");
 
-        public async Task<Dictionary<string, List<MangaChapter>>> GetChaptersGrouped(string url)
+        public async Task<Dictionary<string, List<MangaChapter>>> GetChaptersGrouped(string url, IStatus status)
         {
-            var html = await GetMangaPageHTML(url);
-            var nodes = GetAllChapterNodes(html);
+            var html = await GetMangaPageHTML(url, status);
+            var nodes = GetAllChapterNodes(html, status);
 
             var chapters = nodes.Select(ChapterFromNode).OrderBy(m => m.Chapter).ToList();
             
@@ -54,10 +55,10 @@ namespace MangaInUaDownloader.Services
             }
         }
 
-        public async Task<IEnumerable<MangaChapter>> GetChapters(string url, MangaDownloadOptions options)
+        public async Task<IEnumerable<MangaChapter>> GetChapters(string url, MangaDownloadOptions options, IStatus status)
         {
-            var html = await GetMangaPageHTML(url);
-            var nodes = GetAllChapterNodes(html);
+            var html = await GetMangaPageHTML(url, status);
+            var nodes = GetAllChapterNodes(html, status);
 
             var chapters = nodes
                 .Select(ChapterFromNode)
@@ -82,35 +83,35 @@ namespace MangaInUaDownloader.Services
             else return chapters.Where(IsMainTranslation);
         }
 
-        public async Task<List<string>> GetChapterPages(string url)
+        public async Task<List<string>> GetChapterPages(string url, IStatus status)
         {
-            var html = await GetChapterPageHTML(url);
-            var pages = ScrapService.Instance.GetHTMLNodes(html, XPATH_PAGES, "Collecting pages...");
+            var html = await GetChapterPageHTML(url, status);
+            var pages = GetAllPagesNodes(html, status);
 
             return pages.Select(node => node.Attributes["data-src"].Value).ToList();
         }
 
-        public async Task<string> GetMangaTitle(string url)
+        public async Task<string> GetMangaTitle(string url, IStatus status)
         {
             if (IsChapterURL(url))
             {
-                var html = await GetChapterPageHTML(url);
+                var html = await GetChapterPageHTML(url, status);
                 var node = ScrapService.Instance.GetHTMLNode(html, XPATH_THIS_CHAPTER);
 
                 return _manga_title_rn.Match(node.InnerText).Groups[1].Value;
             }
             else
             {
-                var html = await GetMangaPageHTML(url);
+                var html = await GetMangaPageHTML(url, status);
                 var node = ScrapService.Instance.GetHTMLNode(html, XPATH_HEAD_TITLE);
                 
                 return _manga_title_head.Match(node.InnerText).Groups[1].Value;
             }
         }
 
-        public async Task<MangaChapter> GetChapterDetails(string url)
+        public async Task<MangaChapter> GetChapterDetails(string url, IStatus status)
         {
-            var html = await GetChapterPageHTML(url);
+            var html = await GetChapterPageHTML(url, status);
             var node = ScrapService.Instance.GetHTMLNode(html, XPATH_THIS_CHAPTER);
 
             var match = _tom_rozdil.Match(node.InnerText);
@@ -125,12 +126,12 @@ namespace MangaInUaDownloader.Services
 
         private (string URL, string HTML)? _mangaHTML, _chapterHTML;
 
-        private async Task<string> GetMangaPageHTML(string url)
+        private async Task<string> GetMangaPageHTML(string url, IStatus status)
         {
             if (_mangaHTML is null || _mangaHTML.Value.URL != url)
             {
-                var page = await ScrapService.Instance.OpenWebPageAsync(url, "MANGA");
-                await ScrapService.Instance.LoadElement(page, "div.ltcitems", "chapters");
+                var page = await ScrapService.Instance.OpenWebPageAsync(url, status, "manga");
+                await ScrapService.Instance.LoadElement(page, "div.ltcitems", status, "chapters");
                 var html = await ScrapService.Instance.GetContent(page);
 
                 _mangaHTML = (url, html);
@@ -138,13 +139,13 @@ namespace MangaInUaDownloader.Services
             return _mangaHTML.Value.HTML;
         }
 
-        private async Task<string> GetChapterPageHTML(string url)
+        private async Task<string> GetChapterPageHTML(string url, IStatus status)
         {
             if (_chapterHTML is null || _chapterHTML.Value.URL != url)
             {
-                var page = await ScrapService.Instance.OpenWebPageAsync(url, "CHAPTER");
-                await ScrapService.Instance.Click(page, SELECTOR_BUTTON);
-                await ScrapService.Instance.LoadElement(page, SELECTOR_UL, "pages");
+                var page = await ScrapService.Instance.OpenWebPageAsync(url, status, "chapter");
+                await ScrapService.Instance.Click(page, SELECTOR_BUTTON, status);
+                await ScrapService.Instance.LoadElement(page, SELECTOR_UL, status, "pages");
                 var html = await ScrapService.Instance.GetContent(page);
 
                 _chapterHTML = (url, html);
@@ -152,9 +153,18 @@ namespace MangaInUaDownloader.Services
             return _chapterHTML.Value.HTML;
         }
 
-        private HtmlNodeCollection GetAllChapterNodes(string html)
+        private HtmlNodeCollection GetAllChapterNodes(string html, IStatus status)
         {
-            return ScrapService.Instance.GetHTMLNodes(html, XPATH_CHAPTERS, "Collecting chapters...");
+            status.SetStatus("Collecting chapters...");
+            
+            return ScrapService.Instance.GetHTMLNodes(html, XPATH_CHAPTERS);
+        }
+        
+        private HtmlNodeCollection GetAllPagesNodes(string html, IStatus status)
+        {
+            status.SetStatus("Collecting pages...");
+            
+            return ScrapService.Instance.GetHTMLNodes(html, XPATH_PAGES);
         }
 
         private MangaChapter ChapterFromNode(HtmlNode node)

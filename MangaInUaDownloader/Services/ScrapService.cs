@@ -1,4 +1,5 @@
 using HtmlAgilityPack;
+using MangaInUaDownloader.Utils.ConsoleExtensions;
 using PuppeteerExtraSharp;
 using PuppeteerExtraSharp.Plugins.ExtraStealth;
 using PuppeteerSharp;
@@ -19,10 +20,12 @@ namespace MangaInUaDownloader.Services
 
         private async Task OpenBrowser()
         {
-            await FetchBrowser();
-            
-            await AnsiConsole.Status().StartAsync("Launching browser...", async _ =>
+            await AnsiConsole.Status().StartAsync("Fetching browser...", async ctx =>
             {
+                await FetchBrowser();
+
+                ctx.Status = "Launching browser...";
+                
                 var pup = new PuppeteerExtra().Use(new StealthPlugin());
                 _browser = await pup.LaunchAsync(new LaunchOptions { Headless = true });
             });
@@ -32,15 +35,14 @@ namespace MangaInUaDownloader.Services
 
         private async Task FetchBrowser()
         {
-            await AnsiConsole.Status().StartAsync("Fetching browser...", async _ =>
-            {
-                using var browserFetcher = new BrowserFetcher();
-                await browserFetcher.DownloadAsync();
-            });
+            using var browserFetcher = new BrowserFetcher();
+            await browserFetcher.DownloadAsync();
         }
 
-        public async Task<IPage> OpenWebPageAsync(string url, string what)
+        public async Task<IPage> OpenWebPageAsync(string url, IStatus status, string what)
         {
+            status.SetStatus($"Opening {what} page...");
+            
             var page = await _browser!.NewPageAsync();
 
             await page.SetUserAgentAsync(USER_AGENT);
@@ -49,17 +51,18 @@ namespace MangaInUaDownloader.Services
             return page;
         }
 
-        public async Task LoadElement(IPage page, string selector, string what)
+        public async Task LoadElement(IPage page, string selector, IStatus status, string what)
         {
-            Console.WriteLine($"Loading {what}...");
+            status.SetStatus($"Loading {what}...");
             await page.WaitForSelectorAsync(selector);
         }
         
-        public async Task Click(IPage page, string selector)
+        public async Task Click(IPage page, string selector, IStatus status)
         {
-            Console.WriteLine("Waiting for a button...");
+            status.SetStatus("Waiting for a button...");
             await page.WaitForSelectorAsync(selector, new WaitForSelectorOptions() { Visible = true });
-            Console.WriteLine("Clicking...");
+            
+            status.SetStatus("Clicking...");
             await page.ClickAsync(selector, new ClickOptions() { Delay = 95 });
         }
 
@@ -72,10 +75,8 @@ namespace MangaInUaDownloader.Services
 
         private void DisposePage(IPage page) => page.DisposeAsync();
         
-        public HtmlNodeCollection GetHTMLNodes(string html, string selector, string message)
+        public HtmlNodeCollection GetHTMLNodes(string html, string selector)
         {
-            Console.WriteLine(message);
-            
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
@@ -98,7 +99,7 @@ namespace MangaInUaDownloader.Services
 
         private void CloseBrowser(object? sender, EventArgs e)
         {
-            Console.WriteLine("Closing browser...");
+            new ConsoleStatus().SetStatus("Closing browser...");
             _browser?.DisposeAsync();
         }
     }

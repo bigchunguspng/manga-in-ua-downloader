@@ -1,4 +1,5 @@
 using System.Net;
+using MangaInUaDownloader.Utils.ConsoleExtensions;
 using Spectre.Console;
 
 #pragma warning disable SYSLIB0014
@@ -15,6 +16,8 @@ namespace MangaInUaDownloader.Downloaders
         public override async Task Run(ProgressTask progress)
         {
             progress.MaxValue = Links.Count;
+            progress.StartTask();
+            progress.SetStatus("Downloading...");
             Location = Directory.CreateDirectory(Location).FullName;
             
             using var client = new WebClient();
@@ -26,6 +29,7 @@ namespace MangaInUaDownloader.Downloaders
                 progress.Increment(1);
                 //Console.WriteLine($"[downloaded] \"{output}\"");
             }
+            progress.SetStatus("Done ✓");
         }
 
         private string RelativePath() => Path.GetRelativePath(Environment.CurrentDirectory, Location);

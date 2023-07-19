@@ -4,8 +4,6 @@ using System.Globalization;
 using MangaInUaDownloader.Commands;
 using MangaInUaDownloader.MangaRequestHandlers;
 using MangaInUaDownloader.Services;
-using Spectre.Console;
-using Spectre.Console.Rendering;
 
 // miu-dl [-o "Title\Chapter"] URL-chapter
 // miu-dl [--translators-list] URL-title // out: ch A - B: tr.1 \n ch C - D: tr.1, tr.2 ...

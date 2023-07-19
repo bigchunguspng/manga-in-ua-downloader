@@ -55,21 +55,27 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             
             if    (_mangaService.IsChapterURL(URL))
             {
-                // call service to get a list of pages urls (and a title if ness)
-                var pages = await _mangaService.GetChapterPages(URL);
-                var chapter = await _mangaService.GetChapterDetails(URL);
+                List<string> pages = null!;
+                MangaChapter chapter = null!;
+                string path = null!;
                 
-                // prepare the path
-                var path = VolumeDirectoryName(chapter.Volume);
-                if (MakeDirectory) // /Title/Том 1/...
+                await AnsiConsole.Status().StartAsync("Fetching browser...", async ctx =>
                 {
-                    var title = await _mangaService.GetMangaTitle(URL);
-                    path = Path.Combine(title, path);
-                }
-                if (Chapterize) // ../Том 1/Розділ 8/... 
-                {
-                    path = Path.Combine(path, ChapterDirectoryName(chapter));
-                }
+                    var status = new StatusStatus(ctx);
+                    
+                    pages = await _mangaService.GetChapterPages(URL, status);
+                    chapter = await _mangaService.GetChapterDetails(URL, status);
+
+                    path = VolumeDirectoryName(chapter.Volume);
+                    if (MakeDirectory)
+                    {
+                        path = Path.Combine(await _mangaService.GetMangaTitle(URL, status), path);
+                    }
+                    if (Chapterize)
+                    {
+                        path = Path.Combine(path, ChapterDirectoryName(chapter));
+                    }
+                });
 
                 await AnsiConsole.Progress()
                     .Columns(
@@ -77,7 +83,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                         new ProgressBarColumn(),
                         new DownloadedColumn(),
                         new TransferSpeedColumn(),
-                        new SpinnerColumn(),
+                        new SpinnerColumn(Spinner.Known.Dots10),
                         new TaskStatusColumn())
                     .StartAsync(async ctx =>
                     {
@@ -93,7 +99,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 var v = Volume  < 0 ? new Range (FromVolume,  ToVolume ) : new Range (Volume,  Volume );
 
                 var options = new MangaDownloadOptions(c, v, Translator, DownloadOtherTranslators);
-                var chapters = (await _mangaService.GetChapters(URL, options)).ToList();
+                var chapters = (await _mangaService.GetChapters(URL, options, new ConsoleStatus())).ToList();
 
 
                 var table = new Table()
@@ -117,27 +123,20 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 if (ListSelected) return 0;
                 
                 // path
-                var root = MakeDirectory ? await _mangaService.GetMangaTitle(URL) : "";
+                var root = MakeDirectory ? await _mangaService.GetMangaTitle(URL, new SilentStatus()) : "";
 
                 var volumes = chapters.GroupBy(x => x.Volume);
                 var downloading = new List<Task>(chapters.Count);
                 
                 await AnsiConsole.Progress()
                     .Columns(
-                        new TaskDescriptionColumn(),
+                        new TaskNameColumn(),
                         new ProgressBarColumn(),
-                        new DownloadedColumn(),
-                        new TransferSpeedColumn(),
-                        new SpinnerColumn())
+                        new PagesDownloadedColumn(),
+                        new SpinnerColumn(),
+                        new TaskStatusColumn())
                     .StartAsync(async ctx =>
                     {
-                        /*var tasks = new List<ProgressTask>(chapters.Count);
-                        foreach (var chapter in chapters)
-                        {
-                            //var name = $"Том {chapter.Volume}. Розділ {chapter.Chapter}:";
-                            tasks.Add(ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:"));
-                            //task.Description = $"{name}\tDownloading...";
-                        }*/
                         foreach (var volume in volumes)
                         {
                             var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
@@ -145,12 +144,12 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                             {
                                 var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
                                 
-                                var taskP = ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:");
-                                var pages = await _mangaService.GetChapterPages(chapter.URL);
+                                var progress = ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:", maxValue: double.NaN);
+                                var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
 
                                 //taskP.MaxValue = pages.Count;
-                                var taskD = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(taskP);
-                                downloading.Add(taskD);
+                                var download = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(progress);
+                                downloading.Add(download);
                             }
                         }
 
@@ -162,7 +161,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             }
             else if (ListChapters)
             {
-                var chapters = await _mangaService.GetChaptersGrouped(URL);
+                var chapters = await _mangaService.GetChaptersGrouped(URL, new ConsoleStatus());
                 var table = new Table()
                     .Border(TableBorder.Simple)
                     .BorderColor(Color.White)

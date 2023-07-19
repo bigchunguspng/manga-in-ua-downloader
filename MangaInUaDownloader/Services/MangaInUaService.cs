@@ -55,7 +55,7 @@ namespace MangaInUaDownloader.Services
             }
         }
 
-        public async Task<IEnumerable<MangaChapter>> GetChapters(string url, MangaDownloadOptions options, IStatus status)
+        public async Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status, MangaDownloadOptions options)
         {
             var html = await GetMangaPageHTML(url, status);
             var nodes = GetAllChapterNodes(html, status);

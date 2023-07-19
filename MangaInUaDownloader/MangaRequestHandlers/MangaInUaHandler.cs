@@ -71,7 +71,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         private async Task ListAvailableChapters()
         {
             var chapters = await _mangaService.GetChaptersGrouped(URL, new ConsoleStatus());
-            var table = GetChaptersTable().AddColumn(new TableColumn("ALT"));
+            var table = CreateChaptersTable().AddColumn(new TableColumn("ALT"));
             foreach (var title in chapters)
             {
                 var c = title.Value.First();
@@ -90,39 +90,50 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         private async Task DownloadChapters()
         {
-            var c = Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter);
-            var v = Volume < 0 ? new Range(FromVolume, ToVolume) : new Range(Volume, Volume);
+            List<MangaChapter> chapters = null!;
 
-            var options = new MangaDownloadOptions(c, v, Translator, DownloadOtherTranslators);
-            var chapters = (await _mangaService.GetChapters(URL, options, new ConsoleStatus())).ToList();
+            await AnsiConsole.Status().StartAsync("...", async ctx =>
+            {
+                var status = new StatusStatus(ctx, "yellow");
 
+                var c = Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter);
+                var v = Volume  < 0 ? new Range (FromVolume,  ToVolume ) : new Range (Volume,  Volume );
 
-            var table = GetChaptersTable();
-            foreach (var chapter in chapters) // cw
+                var options = new MangaDownloadOptions(c, v, Translator, DownloadOtherTranslators);
+
+                chapters = (await _mangaService.GetChapters(URL, status, options)).ToList();
+            });
+
+            var title = await _mangaService.GetMangaTitle(URL, new SilentStatus());
+
+            var table = CreateChaptersTable();
+            
+            foreach (var chapter in chapters)
             {
                 table.AddRow(
-                    new Text($"{chapter.Volume}"),
-                    new Text($"{chapter.Chapter}"),
-                    new Text(chapter.Title),
-                    new Text(chapter.Translator));
-                //Console.WriteLine($"Vol. {chapter.Volume} Ch. {chapter.Chapter} {chapter.Title} (by {chapter.Translator}{(chapter.IsAlternative ? " (ALT)" : "")})");
+                    new Text($"{chapter.Volume }" ),
+                    new Text($"{chapter.Chapter}" ),
+                    new Text(   chapter.Title     ),
+                    new Text(   chapter.Translator));
             }
-
+            AnsiConsole.MarkupLine($"\nЗа вашим запитом буде завантажено [blue]{chapters.Count}[/] розділів манґи [yellow]\"{title}\"[/]:"); // todo if 0 TEST!!!
             AnsiConsole.Write(table);
 
             if (ListSelected) return;
 
-            // path
-            var root = MakeDirectory ? await _mangaService.GetMangaTitle(URL, new SilentStatus()) : "";
 
-            var volumes = chapters.GroupBy(x => x.Volume);
-            var downloading = new List<Task>(chapters.Count);
+            var root = MakeDirectory ? Directory.CreateDirectory(title).FullName : Environment.CurrentDirectory;
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
-                foreach (var volume in volumes)
+                AnsiConsole.MarkupLine($"Розпочинаю завантаження до {(MakeDirectory ? $"теки [yellow link]\"{root}\"[/]" : "поточної теки")}.");
+
+                var downloading = new List<Task>(chapters.Count);
+
+                foreach (var volume in chapters.GroupBy(x => x.Volume))
                 {
                     var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
+                    
                     foreach (var chapter in volume)
                     {
                         var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
@@ -130,17 +141,15 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                         var progress = NewChapterProgressTask(ctx, chapter);
                         var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
 
-                        //taskP.MaxValue = pages.Count;
                         var download = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(progress);
                         downloading.Add(download);
                     }
                 }
 
-                // await all tasks
                 await Task.WhenAll(downloading);
             });
-            // cw some shit idk
-            Console.WriteLine("done!");
+
+            AnsiConsole.MarkupLine("[green]Манґа завантажена![/]\n");
         }
 
         private async Task DownloadSingleChapter()
@@ -169,7 +178,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             });
         }
 
-        private Table GetChaptersTable()
+        private Table CreateChaptersTable()
         {
             return new Table()
                 .Border(TableBorder.Simple)

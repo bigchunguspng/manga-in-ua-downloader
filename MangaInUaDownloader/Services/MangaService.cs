@@ -18,7 +18,7 @@ namespace MangaInUaDownloader.Services
         /// <summary>
         /// Returns chapters selected by provided options
         /// </summary>
-        public Task<IEnumerable<MangaChapter>> GetChapters(string url, MangaDownloadOptions options, IStatus status);
+        public Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status, MangaDownloadOptions options);
         
         /// <summary>
         /// Returns URL of every chapter's page

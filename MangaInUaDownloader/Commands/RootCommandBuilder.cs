@@ -40,8 +40,8 @@ namespace MangaInUaDownloader.Commands
             
             ChapterizeOption.AddAlias("-s");
             
-            OnlyTranslatorOption.AddAlias("-ot");
-            PreferTranslatorOption.AddAlias("-pt");
+            OnlyTranslatorOption.AddAlias("-o");
+            PreferTranslatorOption.AddAlias("-p");
             
             ListChaptersOption.AddAlias("-lc");
             ListSelectedOption.AddAlias("-ls");

@@ -1,4 +1,5 @@
 using System.Net;
+using Spectre.Console;
 
 #pragma warning disable SYSLIB0014
 
@@ -11,8 +12,9 @@ namespace MangaInUaDownloader.Downloaders
 
         public RawDownloadTask(List<string> links, string path, float chapter, bool chapterize) : base(links, path, chapter, chapterize) { }
         
-        public override async Task Run()
+        public override async Task Run(ProgressTask progress)
         {
+            progress.MaxValue = Links.Count;
             Location = Directory.CreateDirectory(Location).FullName;
             
             using var client = new WebClient();
@@ -21,7 +23,8 @@ namespace MangaInUaDownloader.Downloaders
                 var number = Chapterize ? PageNumber() : ChapterPageNumber();
                 var output = Path.Combine(RelativePath(), $"{number}{Path.GetExtension(link)}");
                 await client.DownloadFileTaskAsync(link, output);
-                Console.WriteLine($"[downloaded] \"{output}\"");
+                progress.Increment(1);
+                //Console.WriteLine($"[downloaded] \"{output}\"");
             }
         }
 

@@ -1,3 +1,5 @@
+using Spectre.Console;
+
 namespace MangaInUaDownloader.Downloaders
 {
     public abstract class DownloadTask
@@ -15,6 +17,6 @@ namespace MangaInUaDownloader.Downloaders
             Chapterize = chapterize;
         }
 
-        public abstract Task Run();
+        public abstract Task Run(ProgressTask progress);
     }
 }

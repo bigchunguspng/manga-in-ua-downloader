@@ -3,6 +3,7 @@ using PuppeteerExtraSharp;
 using PuppeteerExtraSharp.Plugins.ExtraStealth;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
+using Spectre.Console;
 
 namespace MangaInUaDownloader.Services
 {
@@ -20,23 +21,26 @@ namespace MangaInUaDownloader.Services
         {
             await FetchBrowser();
             
-            Console.WriteLine("Launching browser...");
-            var pup = new PuppeteerExtra().Use(new StealthPlugin());
-            _browser = await pup.LaunchAsync(new LaunchOptions { Headless = false });
-            
+            await AnsiConsole.Status().StartAsync("Launching browser...", async _ =>
+            {
+                var pup = new PuppeteerExtra().Use(new StealthPlugin());
+                _browser = await pup.LaunchAsync(new LaunchOptions { Headless = true });
+            });
+
             AppDomain.CurrentDomain.ProcessExit += CloseBrowser;
         }
 
         private async Task FetchBrowser()
         {
-            Console.WriteLine("Fetching browser...");
-            using var browserFetcher = new BrowserFetcher();
-            await browserFetcher.DownloadAsync();
+            await AnsiConsole.Status().StartAsync("Fetching browser...", async _ =>
+            {
+                using var browserFetcher = new BrowserFetcher();
+                await browserFetcher.DownloadAsync();
+            });
         }
 
         public async Task<IPage> OpenWebPageAsync(string url, string what)
         {
-            Console.WriteLine($"Opening {what} page...");
             var page = await _browser!.NewPageAsync();
 
             await page.SetUserAgentAsync(USER_AGENT);

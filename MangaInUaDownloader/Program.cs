@@ -4,6 +4,8 @@ using System.Globalization;
 using MangaInUaDownloader.Commands;
 using MangaInUaDownloader.MangaRequestHandlers;
 using MangaInUaDownloader.Services;
+using Spectre.Console;
+using Spectre.Console.Rendering;
 
 // miu-dl [-o "Title\Chapter"] URL-chapter
 // miu-dl [--translators-list] URL-title // out: ch A - B: tr.1 \n ch C - D: tr.1, tr.2 ...
@@ -26,7 +28,29 @@ namespace MangaInUaDownloader
 
             //Console.WriteLine(new MangaInUaService().GetMangaTitle("https://manga.in.ua/chapters/42053-stvorenij-u-bezodni-tom-1-rozdil-3.html"));
 
-            //return 0;
+            /*await AnsiConsole.Progress()
+                .Columns(
+                    new TaskNameColumn(),
+                    new ProgressBarColumn(),
+                    new DownloadedColumn(),
+                    new TransferSpeedColumn(),
+                    new SpinnerColumn(),
+                    new TaskStatusColumn())
+                .StartAsync(async ctx =>
+                {
+                    var name = "Том 2. Розділ 3:";
+                    var task1 = ctx.AddTask($"{name}\tGetting urls...");
+                    await Task.Delay(2150);
+                    task1.Description = $"{name}\tDownloading...";
+                    
+                    while (!ctx.IsFinished)
+                    {
+                        task1.Increment(1);
+                        await Task.Delay(150);
+                    }
+                });
+            
+            return 0;*/
 
             var list = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
             var handler = new RootCommandHandler().WithTheseSubhandlers(list);

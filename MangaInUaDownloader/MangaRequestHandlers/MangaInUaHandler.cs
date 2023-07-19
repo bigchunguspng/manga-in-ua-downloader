@@ -145,35 +145,27 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         private async Task DownloadSingleChapter()
         {
-            List<string> pages = null!;
             MangaChapter chapter = null!;
-            string path = null!;
+            List<string> pages   = null!;
+            string       path    = null!;
 
             await AnsiConsole.Status().StartAsync("...", async ctx =>
             {
                 var status = new StatusStatus(ctx, "yellow");
 
-                pages = await _mangaService.GetChapterPages(URL, status);
+                pages   = await _mangaService.GetChapterPages  (URL, status);
                 chapter = await _mangaService.GetChapterDetails(URL, status);
 
                 path = VolumeDirectoryName(chapter.Volume);
-                if (MakeDirectory)
-                {
-                    path = Path.Combine(await _mangaService.GetMangaTitle(URL, status), path);
-                }
 
-                if (Chapterize)
-                {
-                    path = Path.Combine(path, ChapterDirectoryName(chapter));
-                }
+                if (MakeDirectory) path = Path.Combine(await _mangaService.GetMangaTitle(URL, status), path);
+                if (Chapterize)    path = Path.Combine(path, ChapterDirectoryName(chapter));
             });
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
                 var progress = NewChapterProgressTask(ctx, chapter);
-                // pass the shit to dl
-                var task = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize);
-                await task.Run(progress);
+                await new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(progress);
             });
         }
 

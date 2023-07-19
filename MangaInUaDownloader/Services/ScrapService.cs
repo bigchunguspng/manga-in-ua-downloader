@@ -4,6 +4,7 @@ using PuppeteerExtraSharp;
 using PuppeteerExtraSharp.Plugins.ExtraStealth;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
+using Spectre.Console;
 
 namespace MangaInUaDownloader.Services
 {
@@ -97,8 +98,7 @@ namespace MangaInUaDownloader.Services
 
         private void CloseBrowser(object? sender, EventArgs e)
         {
-            new ConsoleStatus().SetStatus("Closing browser...");
-            _browser?.DisposeAsync();
+            AnsiConsole.Status().Start("Closing browser...", _ => _browser?.DisposeAsync());
         }
     }
 }

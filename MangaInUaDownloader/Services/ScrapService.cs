@@ -13,7 +13,7 @@ namespace MangaInUaDownloader.Services
 
         public static readonly ScrapService Instance = new();
 
-        private IBrowser? _browser; // todo dispose after all
+        private IBrowser? _browser;
 
         private async Task OpenBrowser(IStatus status)
         {
@@ -41,7 +41,6 @@ namespace MangaInUaDownloader.Services
             }
             
             status.SetStatus($"Opening {what} page...");
-            
             var page = await _browser!.NewPageAsync();
 
             await page.SetUserAgentAsync(USER_AGENT);
@@ -68,7 +67,7 @@ namespace MangaInUaDownloader.Services
         public async Task<string> GetContent(IPage page)
         {
             var html = await page.GetContentAsync();
-            DisposePage(page); // try todo not await
+            DisposePage(page);
             return html;
         }
 

@@ -23,7 +23,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         private string? Translator;
         private bool DownloadOtherTranslators;
         private bool ListChapters, ListSelected;
-        private string? URL;
+        private string URL = null!;
 
         public MangaInUaHandler(MangaService mangaService)
         {
@@ -53,140 +53,151 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             Translator = ot ?? pt;
             DownloadOtherTranslators = ot is null;
             
-            if    (_mangaService.IsChapterURL(URL))
+            if      (_mangaService.IsChapterURL(URL))
             {
-                List<string> pages = null!;
-                MangaChapter chapter = null!;
-                string path = null!;
-                
-                await AnsiConsole.Status().StartAsync("...", async ctx =>
-                {
-                    var status = new StatusStatus(ctx);
-
-                    pages = await _mangaService.GetChapterPages(URL, status);
-                    chapter = await _mangaService.GetChapterDetails(URL, status);
-
-                    path = VolumeDirectoryName(chapter.Volume);
-                    if (MakeDirectory)
-                    {
-                        path = Path.Combine(await _mangaService.GetMangaTitle(URL, status), path);
-                    }
-                    if (Chapterize)
-                    {
-                        path = Path.Combine(path, ChapterDirectoryName(chapter));
-                    }
-                });
-
-                await AnsiConsole.Progress()
-                    .Columns(
-                        new TaskNameColumn(),
-                        new ProgressBarColumn(),
-                        new PagesDownloadedColumn(),
-                        new SpinnerColumn(),
-                        new TaskStatusColumn())
-                    .StartAsync(async ctx =>
-                    {
-                        var progress = ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:");
-                        // pass the shit to dl
-                        var task = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize);
-                        await task.Run(progress);
-                    });
+                await DownloadSingleChapter();
             }
-            else if (_mangaService.IsMangaURL(URL) && !ListChapters)
+            else if (_mangaService.IsMangaURL(URL))
             {
-                var c = Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter);
-                var v = Volume  < 0 ? new Range (FromVolume,  ToVolume ) : new Range (Volume,  Volume );
-
-                var options = new MangaDownloadOptions(c, v, Translator, DownloadOtherTranslators);
-                var chapters = (await _mangaService.GetChapters(URL, options, new ConsoleStatus())).ToList();
-
-
-                var table = new Table()
-                    .Border(TableBorder.Simple)
-                    .BorderColor(Color.White)
-                    .AddColumn(new TableColumn("VOL").RightAligned())
-                    .AddColumn(new TableColumn("CH").RightAligned())
-                    .AddColumn(new TableColumn("TITLE"))
-                    .AddColumn(new TableColumn("TRANSLATED BY"));
-                foreach (var chapter in chapters) // cw
-                {
-                    table.AddRow(
-                        new Text($"{chapter.Volume}"),
-                        new Text($"{chapter.Chapter}"),
-                        new Text(chapter.Title),
-                        new Text(chapter.Translator));
-                    //Console.WriteLine($"Vol. {chapter.Volume} Ch. {chapter.Chapter} {chapter.Title} (by {chapter.Translator}{(chapter.IsAlternative ? " (ALT)" : "")})");
-                }
-                AnsiConsole.Write(table);
-
-                if (ListSelected) return 0;
-                
-                // path
-                var root = MakeDirectory ? await _mangaService.GetMangaTitle(URL, new SilentStatus()) : "";
-
-                var volumes = chapters.GroupBy(x => x.Volume);
-                var downloading = new List<Task>(chapters.Count);
-                
-                await AnsiConsole.Progress()
-                    .Columns(
-                        new TaskNameColumn(),
-                        new ProgressBarColumn(),
-                        new PagesDownloadedColumn(),
-                        new SpinnerColumn(),
-                        new TaskStatusColumn())
-                    .StartAsync(async ctx =>
-                    {
-                        foreach (var volume in volumes)
-                        {
-                            var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
-                            foreach (var chapter in volume)
-                            {
-                                var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
-                                
-                                var progress = ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:", maxValue: double.NaN);
-                                var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
-
-                                //taskP.MaxValue = pages.Count;
-                                var download = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(progress);
-                                downloading.Add(download);
-                            }
-                        }
-
-                        // await all tasks
-                        await Task.WhenAll(downloading);
-                    });
-                // cw some shit idk
-                Console.WriteLine("done!");
-            }
-            else if (ListChapters)
-            {
-                var chapters = await _mangaService.GetChaptersGrouped(URL, new ConsoleStatus());
-                var table = new Table()
-                    .Border(TableBorder.Simple)
-                    .BorderColor(Color.White)
-                    .AddColumn(new TableColumn("VOL").RightAligned())
-                    .AddColumn(new TableColumn("CH").RightAligned())
-                    .AddColumn(new TableColumn("TITLE"))
-                    .AddColumn(new TableColumn("TRANSLATED BY"))
-                    .AddColumn(new TableColumn("ALT"));
-                foreach (var title in chapters)
-                {
-                    var c = title.Value.First();
-                    var alt = title.Value.Count > 1 ? string.Join("; ", title.Value.Skip(1).Select(x => x.Translator)) : "";
-                    var style = c.Volume % 2 == 0 ? new Style(Color.Yellow) : new Style(Color.DeepSkyBlue1);
-                    table.AddRow(
-                        new Text($"{c.Volume}", style),
-                        new Text($"{c.Chapter}", style),
-                        new Text(title.Key, style),
-                        new Text(c.Translator, style),
-                        new Text(alt, style));
-                }
-                AnsiConsole.Write(table);
+                if (ListChapters) await ListAvailableChapters();
+                else              await DownloadChapters();
             }
             else return 1;
 
             return 0;
         }
+
+        
+        private async Task ListAvailableChapters()
+        {
+            var chapters = await _mangaService.GetChaptersGrouped(URL, new ConsoleStatus());
+            var table = GetChaptersTable().AddColumn(new TableColumn("ALT"));
+            foreach (var title in chapters)
+            {
+                var c = title.Value.First();
+                var alt = title.Value.Count > 1 ? string.Join("; ", title.Value.Skip(1).Select(x => x.Translator)) : "";
+                var style = c.Volume % 2 == 0 ? new Style(Color.Yellow) : new Style(Color.DeepSkyBlue1);
+                table.AddRow(
+                    new Text($"{c.Volume}", style),
+                    new Text($"{c.Chapter}", style),
+                    new Text(title.Key, style),
+                    new Text(c.Translator, style),
+                    new Text(alt, style));
+            }
+
+            AnsiConsole.Write(table);
+        }
+
+        private async Task DownloadChapters()
+        {
+            var c = Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter);
+            var v = Volume < 0 ? new Range(FromVolume, ToVolume) : new Range(Volume, Volume);
+
+            var options = new MangaDownloadOptions(c, v, Translator, DownloadOtherTranslators);
+            var chapters = (await _mangaService.GetChapters(URL, options, new ConsoleStatus())).ToList();
+
+
+            var table = GetChaptersTable();
+            foreach (var chapter in chapters) // cw
+            {
+                table.AddRow(
+                    new Text($"{chapter.Volume}"),
+                    new Text($"{chapter.Chapter}"),
+                    new Text(chapter.Title),
+                    new Text(chapter.Translator));
+                //Console.WriteLine($"Vol. {chapter.Volume} Ch. {chapter.Chapter} {chapter.Title} (by {chapter.Translator}{(chapter.IsAlternative ? " (ALT)" : "")})");
+            }
+
+            AnsiConsole.Write(table);
+
+            if (ListSelected) return;
+
+            // path
+            var root = MakeDirectory ? await _mangaService.GetMangaTitle(URL, new SilentStatus()) : "";
+
+            var volumes = chapters.GroupBy(x => x.Volume);
+            var downloading = new List<Task>(chapters.Count);
+
+            await GetChapterDownloadingProgress().StartAsync(async ctx =>
+            {
+                foreach (var volume in volumes)
+                {
+                    var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
+                    foreach (var chapter in volume)
+                    {
+                        var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
+
+                        var progress = NewChapterProgressTask(ctx, chapter);
+                        var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
+
+                        //taskP.MaxValue = pages.Count;
+                        var download = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(progress);
+                        downloading.Add(download);
+                    }
+                }
+
+                // await all tasks
+                await Task.WhenAll(downloading);
+            });
+            // cw some shit idk
+            Console.WriteLine("done!");
+        }
+
+        private async Task DownloadSingleChapter()
+        {
+            List<string> pages = null!;
+            MangaChapter chapter = null!;
+            string path = null!;
+
+            await AnsiConsole.Status().StartAsync("...", async ctx =>
+            {
+                var status = new StatusStatus(ctx, "yellow");
+
+                pages = await _mangaService.GetChapterPages(URL, status);
+                chapter = await _mangaService.GetChapterDetails(URL, status);
+
+                path = VolumeDirectoryName(chapter.Volume);
+                if (MakeDirectory)
+                {
+                    path = Path.Combine(await _mangaService.GetMangaTitle(URL, status), path);
+                }
+
+                if (Chapterize)
+                {
+                    path = Path.Combine(path, ChapterDirectoryName(chapter));
+                }
+            });
+
+            await GetChapterDownloadingProgress().StartAsync(async ctx =>
+            {
+                var progress = NewChapterProgressTask(ctx, chapter);
+                // pass the shit to dl
+                var task = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize);
+                await task.Run(progress);
+            });
+        }
+
+        private Table GetChaptersTable()
+        {
+            return new Table()
+                .Border(TableBorder.Simple)
+                .BorderColor(Color.White)
+                .AddColumn(new TableColumn("VOL").RightAligned())
+                .AddColumn(new TableColumn("CH").RightAligned())
+                .AddColumn(new TableColumn("TITLE"))
+                .AddColumn(new TableColumn("TRANSLATED BY"));
+        }
+        
+        private Progress GetChapterDownloadingProgress()
+        {
+            return AnsiConsole.Progress().Columns(new TaskNameColumn(), new ProgressBarColumn(), new PagesDownloadedColumn(), new SpinnerColumn(), new TaskStatusColumn());
+        }
+
+        private ProgressTask NewChapterProgressTask(ProgressContext ctx, MangaChapter chapter)
+        {
+            return ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:", maxValue: double.NaN);
+        }
+        
         
         private string VolumeDirectoryName(int i) => $"Том {i}";
 

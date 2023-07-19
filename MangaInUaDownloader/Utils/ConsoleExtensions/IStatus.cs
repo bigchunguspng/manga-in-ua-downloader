@@ -25,16 +25,22 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
     public class StatusStatus : IStatus
     {
         private readonly StatusContext _context;
+        private readonly string _color;
 
-        public StatusStatus(StatusContext context) => _context = context;
+        public StatusStatus(StatusContext context, string color = "default")
+        {
+            _context = context;
+            _color = color;
+        }
 
 
         public void SetStatus(string status)
         {
-            _context.Status = status;
+            _context.Status = $"[{_color}]{status}[/]";
         }
     }
-    
+
+
     public class ConsoleStatus : IStatus
     {
         public void SetStatus(string status)
@@ -42,6 +48,7 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
             AnsiConsole.MarkupLine(status);
         }
     }
+
 
     public class SilentStatus : IStatus
     {

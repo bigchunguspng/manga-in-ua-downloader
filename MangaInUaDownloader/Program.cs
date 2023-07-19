@@ -4,6 +4,7 @@ using System.Globalization;
 using MangaInUaDownloader.Commands;
 using MangaInUaDownloader.MangaRequestHandlers;
 using MangaInUaDownloader.Services;
+using Spectre.Console;
 
 // miu-dl [-o "Title\Chapter"] URL-chapter
 // miu-dl [--translators-list] URL-title // out: ch A - B: tr.1 \n ch C - D: tr.1, tr.2 ...
@@ -49,6 +50,28 @@ namespace MangaInUaDownloader
                 });
             
             return 0;*/
+
+            /*var colors = new List<string>(256);
+            foreach (var property in Color.Aqua.GetType().GetProperties())
+            {
+                if (property.PropertyType == Color.Aqua.GetType())
+                {
+                    colors.Add($"[{property.Name.ToLower()}]{property.Name.ToLower()}[/]");
+                }
+            }
+
+            var num = (int)Math.Ceiling(colors.Count / 6D);
+
+            var cols = colors.Chunk(num).ToList();
+
+            var table = new Table().Border(TableBorder.Simple).AddColumn("--").AddColumn("--").AddColumn("--").AddColumn("--").AddColumn("--").AddColumn("--");
+            for (int i = 0; i < num; i++)
+            {
+                table.AddRow(new Markup(cols[0][i]), new Markup(cols[1][i]), new Markup(cols[2][i]), new Markup(cols[3][i]), new Markup(cols[4][i]), new Markup(cols[5].Length > i ? cols[5][i] : ""));
+            }
+            AnsiConsole.Write(table);*/
+
+            //return 0;
 
             var list = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
             var handler = new RootCommandHandler().WithTheseSubhandlers(list);

@@ -11,13 +11,18 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
     public class ProgressStatus : IStatus
     {
         private readonly ProgressTask _progress;
+        private readonly string _color;
 
-        public ProgressStatus(ProgressTask progress) => _progress = progress;
+        public ProgressStatus(ProgressTask progress, string color = "yellow")
+        {
+            _progress = progress;
+            _color = color;
+        }
 
 
         public void SetStatus(string status)
         {
-            _progress.SetStatus(status);
+            _progress.SetStatus($"[{_color}]{status}[/]");
         }
     }
 

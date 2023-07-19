@@ -126,7 +126,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
-                AnsiConsole.MarkupLine($"Розпочинаю завантаження до {(MakeDirectory ? $"теки [yellow link]\"{root}\"[/]" : "поточної теки")}.");
+                AnsiConsole.MarkupLine($"Розпочинаю завантаження до {(MakeDirectory ? $"теки [yellow]\"[link]{root}[/]\"[/]" : "поточної теки")}.");
 
                 var downloading = new List<Task>(chapters.Count);
 
@@ -191,7 +191,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         
         private Progress GetChapterDownloadingProgress()
         {
-            return AnsiConsole.Progress().Columns(new TaskNameColumn(), new ProgressBarColumn(), new PagesDownloadedColumn(), new SpinnerColumn(), new TaskStatusColumn());
+            return AnsiConsole.Progress().Columns(new TaskNameColumn(), new ProgressBarColumn() { CompletedStyle = Color.Olive }, new PagesDownloadedColumn(), new SpinnerColumn(), new TaskStatusColumn());
         }
 
         private ProgressTask NewChapterProgressTask(ProgressContext ctx, MangaChapter chapter)

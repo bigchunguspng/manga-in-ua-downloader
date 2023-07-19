@@ -17,7 +17,7 @@ namespace MangaInUaDownloader.Downloaders
         {
             progress.MaxValue = Links.Count;
             progress.StartTask();
-            progress.SetStatus("Downloading...");
+            progress.SetStatus("[olive]Downloading...[/]");
             Location = Directory.CreateDirectory(Location).FullName;
             
             using var client = new WebClient();
@@ -29,7 +29,7 @@ namespace MangaInUaDownloader.Downloaders
                 progress.Increment(1);
                 //Console.WriteLine($"[downloaded] \"{output}\"");
             }
-            progress.SetStatus("Done ✓");
+            progress.SetStatus("[green]Done ✓[/]");
         }
 
         private string RelativePath() => Path.GetRelativePath(Environment.CurrentDirectory, Location);

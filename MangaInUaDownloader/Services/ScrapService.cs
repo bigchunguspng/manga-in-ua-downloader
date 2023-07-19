@@ -4,31 +4,25 @@ using PuppeteerExtraSharp;
 using PuppeteerExtraSharp.Plugins.ExtraStealth;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
-using Spectre.Console;
 
 namespace MangaInUaDownloader.Services
 {
     public class ScrapService // todo rename this mf
     {
         private const string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0";
-        
+
         public static readonly ScrapService Instance = new();
 
         private IBrowser? _browser; // todo dispose after all
 
-        private ScrapService() => OpenBrowser().Wait();
-
-        private async Task OpenBrowser()
+        private async Task OpenBrowser(IStatus status)
         {
-            await AnsiConsole.Status().StartAsync("Fetching browser...", async ctx =>
-            {
-                await FetchBrowser();
+            status.SetStatus("Fetching browser...");
+            await FetchBrowser();
 
-                ctx.Status = "Launching browser...";
-                
-                var pup = new PuppeteerExtra().Use(new StealthPlugin());
-                _browser = await pup.LaunchAsync(new LaunchOptions { Headless = true });
-            });
+            status.SetStatus("Launching browser...");
+            var pup = new PuppeteerExtra().Use(new StealthPlugin());
+            _browser = await pup.LaunchAsync(new LaunchOptions { Headless = true });
 
             AppDomain.CurrentDomain.ProcessExit += CloseBrowser;
         }
@@ -41,6 +35,11 @@ namespace MangaInUaDownloader.Services
 
         public async Task<IPage> OpenWebPageAsync(string url, IStatus status, string what)
         {
+            if (_browser is null)
+            {
+                await OpenBrowser(status);
+            }
+            
             status.SetStatus($"Opening {what} page...");
             
             var page = await _browser!.NewPageAsync();

@@ -59,10 +59,10 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 MangaChapter chapter = null!;
                 string path = null!;
                 
-                await AnsiConsole.Status().StartAsync("Fetching browser...", async ctx =>
+                await AnsiConsole.Status().StartAsync("...", async ctx =>
                 {
                     var status = new StatusStatus(ctx);
-                    
+
                     pages = await _mangaService.GetChapterPages(URL, status);
                     chapter = await _mangaService.GetChapterDetails(URL, status);
 
@@ -81,9 +81,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                     .Columns(
                         new TaskNameColumn(),
                         new ProgressBarColumn(),
-                        new DownloadedColumn(),
-                        new TransferSpeedColumn(),
-                        new SpinnerColumn(Spinner.Known.Dots10),
+                        new PagesDownloadedColumn(),
+                        new SpinnerColumn(),
                         new TaskStatusColumn())
                     .StartAsync(async ctx =>
                     {

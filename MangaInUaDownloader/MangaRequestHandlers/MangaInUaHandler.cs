@@ -76,7 +76,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             {
                 var c = title.Value.First();
                 var alt = title.Value.Count > 1 ? string.Join("; ", title.Value.Skip(1).Select(x => x.Translator)) : "";
-                var style = c.Volume % 2 == 0 ? new Style(Color.Yellow) : new Style(Color.DeepSkyBlue1);
+                var style = c.Volume % 2 == 0 ? new Style(Color.Yellow) : new Style(Color.Blue);
                 table.AddRow(
                     new Text($"{c.Volume}", style),
                     new Text($"{c.Chapter}", style),
@@ -106,6 +106,12 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             var title = await _mangaService.GetMangaTitle(URL, new SilentStatus());
 
+            if (chapters.Count == 0)
+            {
+                AnsiConsole.MarkupLine("\n[yellow]За вашим запитом не знайдено жодного розділу манґи, спробуйте прибрати зайві опції.\n[/]");
+                return;
+            }
+            
             var table = CreateChaptersTable();
             
             foreach (var chapter in chapters)
@@ -116,7 +122,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                     new Text(   chapter.Title     ),
                     new Text(   chapter.Translator));
             }
-            AnsiConsole.MarkupLine($"\nЗа вашим запитом буде завантажено [blue]{chapters.Count}[/] розділів манґи [yellow]\"{title}\"[/]:"); // todo if 0 TEST!!!
+            AnsiConsole.MarkupLine($"\nЗа вашим запитом знайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title}\"[/]:");
             AnsiConsole.Write(table);
 
             if (ListSelected) return;
@@ -197,6 +203,16 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         private ProgressTask NewChapterProgressTask(ProgressContext ctx, MangaChapter chapter)
         {
             return ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:", maxValue: double.NaN);
+        }
+
+
+        private string Ending_UKR(int n)
+        {
+            if (n      is >= 5 and <= 20) return "ів";
+            if (n % 10 == 1)              return "";
+            if (n % 10 is >= 2 and <=  4) return "и";
+
+            return "ів";
         }
         
         

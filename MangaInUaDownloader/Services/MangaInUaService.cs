@@ -30,10 +30,7 @@ namespace MangaInUaDownloader.Services
 
         public async Task<Dictionary<string, List<MangaChapter>>> GetChaptersGrouped(string url, IStatus status)
         {
-            var html = await GetMangaPageHTML(url, status);
-            var nodes = GetAllChapterNodes(html, status);
-
-            var chapters = nodes.Select(ChapterFromNode).OrderBy(m => m.Chapter).ToList();
+            var chapters = (await GetChapters(url, status)).ToList();
             
             FixNaming(chapters);
 
@@ -59,17 +56,10 @@ namespace MangaInUaDownloader.Services
 
         public async Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status, MangaDownloadOptions options)
         {
-            var html = await GetMangaPageHTML(url, status);
-            var nodes = GetAllChapterNodes(html, status);
-
-            var chapters = nodes
-                .Select(ChapterFromNode)
-                .OrderBy(m => m.Chapter)
-                .Where(x => options.Volumes.Contains(x.Volume) && options.Chapters.Contains(x.Chapter))
-                .ToList();
+            var chapters = (await GetChapters(url, status)).Where(options.ChapterHasAppropriateNumber).ToList();
 
             FixNaming(chapters);
-            
+
             if (options.Translator is not null)
             {
                 if (options.DownloadOthers)
@@ -83,6 +73,14 @@ namespace MangaInUaDownloader.Services
                 else return chapters.Where(x => TranslatedBy(x, options.Translator));
             }
             else return chapters.Where(IsMainTranslation);
+        }
+
+        private async Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status)
+        {
+            var html = await GetMangaPageHTML(url, status);
+            var nodes = GetAllChapterNodes(html, status);
+
+            return nodes.Select(ChapterFromNode).OrderBy(m => m.Chapter);
         }
 
         public async Task<List<string>> GetChapterPages(string url, IStatus status)

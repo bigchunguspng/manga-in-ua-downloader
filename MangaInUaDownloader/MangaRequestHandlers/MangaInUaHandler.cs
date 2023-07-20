@@ -213,20 +213,27 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             });
         }
 
+
         private Table CreateChaptersTable()
         {
-            return new Table()
-                .Border(TableBorder.Simple)
-                .BorderColor(Color.White)
+            return new Table().BorderColor(Color.White).Border(TableBorder.Simple)
                 .AddColumn(new TableColumn("VOL").RightAligned())
-                .AddColumn(new TableColumn("CH").RightAligned())
+                .AddColumn(new TableColumn("CH" ).RightAligned())
                 .AddColumn(new TableColumn("TITLE"))
                 .AddColumn(new TableColumn("TRANSLATED BY"));
         }
-        
+
         private Progress GetChapterDownloadingProgress()
         {
-            return AnsiConsole.Progress().Columns(new TaskNameColumn(), new ProgressBarColumn() { CompletedStyle = Color.Olive }, new PagesDownloadedColumn(), new SpinnerColumn(), new TaskStatusColumn());
+            var columns = new ProgressColumn[]
+            {
+                new TaskNameColumn(),
+                new ProgressBarColumn() { CompletedStyle = Color.Olive },
+                new PagesDownloadedColumn(),
+                new SpinnerColumn(),
+                new TaskStatusColumn()
+            };
+            return AnsiConsole.Progress().Columns(columns);
         }
 
         private ProgressTask NewChapterProgressTask(ProgressContext ctx, MangaChapter chapter)
@@ -243,8 +250,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             return "ів";
         }
-        
-        
+
         private string VolumeDirectoryName(int i) => $"Том {i}";
 
         private string ChapterDirectoryName(MangaChapter chapter)

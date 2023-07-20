@@ -20,13 +20,12 @@ namespace MangaInUaDownloader.Services
         private readonly Regex _manga_title_head = new(@"Манґа (.+) читати українською");
         private readonly Regex _chapter_manga_title = new(@"^(.+?) - ");
         private readonly Regex _chapter_tom_rozdil = new(@"Том: (.+)\. Розділ: (\d+(?:\.\d+)?)(?: - (.+))? читати українською");
+        private readonly Regex _chapter_title = new(@".+ - (.+)");
 
 
         public bool IsChapterURL(string url) => Regex.IsMatch(url, @"^https?:\/\/manga\.in\.ua\/chapters\/\S+");
         public bool   IsMangaURL(string url) => Regex.IsMatch(url, @"^https?:\/\/manga\.in\.ua\/mangas\/\S+");
-        
-    
-        private static readonly Regex _chapter_title = new(@".+ - (.+)");
+
 
         public async Task<Dictionary<string, List<MangaChapter>>> GetChaptersGrouped(string url, IStatus status)
         {
@@ -35,23 +34,6 @@ namespace MangaInUaDownloader.Services
             FixNaming(chapters);
 
             return chapters.GroupBy(g => g.Title).ToDictionary(g => g.Key, g => g.ToList());
-        }
-
-        private void FixNaming(List<MangaChapter> chapters)
-        {
-            foreach (var c in chapters)
-            {
-                if (c.Title.Contains(ALT))
-                {
-                    c.IsAlternative = true;
-                    c.Title = chapters.First(x => x.Chapter.Equals(c.Chapter) && !x.Title.Contains(ALT)).Title;
-                }
-                else
-                {
-                    var title = _chapter_title.Match(c.Title).Groups[1].Value;
-                    c.Title = string.IsNullOrEmpty(title) ? MangaService.UNTITLED : title;
-                }
-            }
         }
 
         public async Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status, MangaDownloadOptions options)
@@ -75,6 +57,7 @@ namespace MangaInUaDownloader.Services
             else return chapters.Where(IsMainTranslation);
         }
 
+
         private async Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status)
         {
             var html = await GetMangaPageHTML(url, status);
@@ -83,12 +66,44 @@ namespace MangaInUaDownloader.Services
             return nodes.Select(ChapterFromNode).OrderBy(m => m.Chapter);
         }
 
+        private void FixNaming(List<MangaChapter> chapters)
+        {
+            foreach (var c in chapters)
+            {
+                if (c.Title.Contains(ALT))
+                {
+                    c.IsAlternative = true;
+                    c.Title = chapters.First(x => x.Chapter.Equals(c.Chapter) && !x.Title.Contains(ALT)).Title;
+                }
+                else
+                {
+                    var title = _chapter_title.Match(c.Title).Groups[1].Value;
+                    c.Title = string.IsNullOrEmpty(title) ? MangaService.UNTITLED : title;
+                }
+            }
+        }
+
+
         public async Task<List<string>> GetChapterPages(string url, IStatus status)
         {
             var html = await GetChapterPageHTML(url, status);
             var pages = GetAllPagesNodes(html, status);
 
             return pages.Select(node => node.Attributes["data-src"].Value).ToList();
+        }
+
+        public async Task<MangaChapter> GetChapterDetails(string url, IStatus status)
+        {
+            var html = await GetChapterPageHTML(url, status);
+            var node = GetPageTitle(html);
+
+            var match = _chapter_tom_rozdil.Match(node.InnerText);
+            return new MangaChapter
+            {
+                Volume  = Convert.ToInt32 (match.Groups[1].Value),
+                Chapter = Convert.ToSingle(match.Groups[2].Value),
+                Title = match.Groups[3].Success ? match.Groups[3].Value : MangaService.UNTITLED
+            };
         }
 
         public async Task<string> GetMangaTitle(string url, IStatus status)
@@ -109,22 +124,9 @@ namespace MangaInUaDownloader.Services
             }
         }
 
-        public async Task<MangaChapter> GetChapterDetails(string url, IStatus status)
-        {
-            var html = await GetChapterPageHTML(url, status);
-            var node = GetPageTitle(html);
-
-            var match = _chapter_tom_rozdil.Match(node.InnerText);
-            return new MangaChapter
-            {
-                Volume  = Convert.ToInt32 (match.Groups[1].Value),
-                Chapter = Convert.ToSingle(match.Groups[2].Value),
-                Title = match.Groups[3].Success ? match.Groups[3].Value : MangaService.UNTITLED
-            };
-        }
-
 
         private (string URL, string HTML)? _mangaHTML, _chapterHTML;
+
 
         private async Task<string> GetMangaPageHTML(string url, IStatus status)
         {
@@ -164,6 +166,7 @@ namespace MangaInUaDownloader.Services
                 throw new Exception(exception);
         }
 
+
         private HtmlNode GetPageTitle(string html) => ScrapService.Instance.GetHTMLNode(html, XPATH_HEAD_TITLE);
 
         private HtmlNodeCollection GetAllChapterNodes(string html, IStatus status)
@@ -180,6 +183,7 @@ namespace MangaInUaDownloader.Services
             return ScrapService.Instance.GetHTMLNodes(html, XPATH_PAGES);
         }
 
+
         private MangaChapter ChapterFromNode(HtmlNode node)
         {
             var a = node.ChildNodes["a"];
@@ -193,7 +197,6 @@ namespace MangaInUaDownloader.Services
             };
         }
 
-        
         private bool IsMainTranslation(MangaChapter x) => !x.IsAlternative;
 
         private bool TranslatedBy(MangaChapter chapter, string translator)

@@ -192,7 +192,7 @@ namespace MangaInUaDownloader.Services
                 Volume  = Convert.ToInt32 (node.Attributes["manga-tom"     ].Value),
                 Chapter = Convert.ToSingle(node.Attributes["manga-chappter"].Value),
                 Translator =               node.Attributes["translate"     ].Value,
-                Title = a.InnerText,
+                Title = a.InnerText.Replace("...", "…"),
                 URL   = a.Attributes["href"].Value
             };
         }

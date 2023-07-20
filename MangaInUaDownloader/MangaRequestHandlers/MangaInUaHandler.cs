@@ -266,7 +266,6 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         private static string RemoveIllegalCharacters(string path)
         {
-            path = path.Replace("...", "…");
             var chars = Path.GetInvalidFileNameChars();
             return chars.Aggregate(path, (current, c) => current.Replace(c.ToString(), ""));
         }

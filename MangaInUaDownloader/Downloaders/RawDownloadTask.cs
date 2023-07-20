@@ -27,7 +27,6 @@ namespace MangaInUaDownloader.Downloaders
                 var output = Path.Combine(RelativePath(), $"{number}{Path.GetExtension(link)}");
                 await client.DownloadFileTaskAsync(link, output);
                 progress.Increment(1);
-                //Console.WriteLine($"[downloaded] \"{output}\"");
             }
             progress.SetStatus("[green]Done ✓[/]");
         }

@@ -1,5 +1,6 @@
 using System.CommandLine.Invocation;
 using MangaInUaDownloader.MangaRequestHandlers;
+using Spectre.Console;
 
 namespace MangaInUaDownloader.Commands
 {
@@ -24,7 +25,7 @@ namespace MangaInUaDownloader.Commands
 
             if (MangaHandlers is null)
             {
-                // todo cw explanation
+                AnsiConsole.MarkupLine($"\nAdd at least one [fuchsia]{nameof(MangaRequestHandler)}[/] implementation to your [fuchsia]{nameof(RootCommandHandler)}[/] object.\n");
                 
                 return -1;
             }
@@ -36,7 +37,9 @@ namespace MangaInUaDownloader.Commands
                     return await handler.InvokeAsync(context);
                 }
             }
-            // todo WRONG URL
+            AnsiConsole.MarkupLine("\nCheck the [fuchsia]URL[/]. Your version of this tool supports only these websites:\n");
+            foreach (var handler in MangaHandlers) AnsiConsole.MarkupLine($"[deeppink3][[{handler.MANGA_WEBSITE}]][/]");
+            AnsiConsole.WriteLine();
 
             return -1;
         }

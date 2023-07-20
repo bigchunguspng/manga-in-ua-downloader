@@ -31,6 +31,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             _mangaService = mangaService;
         }
 
+        public override string MANGA_WEBSITE { get; } = "https://manga.in.ua";
+
         public override bool CanHandleThis(string url) => _url.IsMatch(url);
 
         public override async Task<int> InvokeAsync(InvocationContext context)

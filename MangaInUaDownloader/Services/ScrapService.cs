@@ -16,23 +16,6 @@ namespace MangaInUaDownloader.Services
 
         private IBrowser? _browser;
 
-        private async Task OpenBrowser(IStatus status)
-        {
-            status.SetStatus("Fetching browser...");
-            await FetchBrowser();
-
-            status.SetStatus("Launching browser...");
-            var pup = new PuppeteerExtra().Use(new StealthPlugin());
-            _browser = await pup.LaunchAsync(new LaunchOptions { Headless = true });
-
-            AppDomain.CurrentDomain.ProcessExit += CloseBrowser;
-        }
-
-        private async Task FetchBrowser()
-        {
-            using var browserFetcher = new BrowserFetcher();
-            await browserFetcher.DownloadAsync();
-        }
 
         public async Task<IPage> OpenWebPageAsync(string url, IStatus status, string what)
         {
@@ -50,6 +33,25 @@ namespace MangaInUaDownloader.Services
             return page;
         }
 
+        private async Task OpenBrowser(IStatus status)
+        {
+            status.SetStatus("Fetching browser...");
+            await FetchBrowser();
+
+            status.SetStatus("Launching browser...");
+            var pupex = new PuppeteerExtra().Use(new StealthPlugin());
+            _browser = await pupex.LaunchAsync(new LaunchOptions { Headless = true });
+
+            AppDomain.CurrentDomain.ProcessExit += CloseBrowser;
+        }
+
+        private async Task FetchBrowser()
+        {
+            using var browserFetcher = new BrowserFetcher();
+            await browserFetcher.DownloadAsync();
+        }
+
+
         public async Task LoadElement(IPage page, string selector, IStatus status, string what)
         {
             status.SetStatus($"Loading {what}...");
@@ -65,15 +67,16 @@ namespace MangaInUaDownloader.Services
             await page.ClickAsync(selector, new ClickOptions() { Delay = 95 });
         }
 
+
         public async Task<string> GetContent(IPage page)
         {
             var html = await page.GetContentAsync();
             DisposePage(page);
             return html;
         }
-
         private void DisposePage(IPage page) => page.DisposeAsync();
-        
+
+
         public HtmlNodeCollection GetHTMLNodes(string html, string selector)
         {
             var doc = new HtmlDocument();
@@ -86,7 +89,7 @@ namespace MangaInUaDownloader.Services
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
-            
+
             return doc.DocumentNode.SelectSingleNode(selector);
         }
 

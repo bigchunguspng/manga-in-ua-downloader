@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MangaInUaDownloader.Model;
 using MangaInUaDownloader.Utils.ConsoleExtensions;
+using PuppeteerSharp;
 
 namespace MangaInUaDownloader.Services
 {
@@ -10,14 +11,15 @@ namespace MangaInUaDownloader.Services
         private const string ALT = "Альтернативний переклад";
         private const string XPATH_CHAPTERS = "//div[@id='linkstocomics']//div[@class='ltcitems']";
         private const string XPATH_PAGES = "//div[@id='comics']//ul[@class='xfieldimagegallery loadcomicsimages']//li//img";
-        private const string XPATH_THIS_CHAPTER = "//div[@id='site-content']//div[@class='youreadnow']";
         private const string XPATH_HEAD_TITLE = "//head//title";
         private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
         private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
+        private const string MANGA_NOT_FOUND =           "Manga you are looking for don't exist. Check your URL.";
+        private const string CHAPTER_NOT_FOUND = "Manga chapter you are looking for don't exist. Check your URL.";
 
         private readonly Regex _manga_title_head = new(@"Манґа (.+) читати українською");
-        private readonly Regex _manga_title_rn = new(@"Читати: (.+?) - ");
-        private readonly Regex _tom_rozdil = new(@"Том: (.+)\. Розділ: (\d+(?:\.\d+)?)(?: - (.+))?");
+        private readonly Regex _chapter_manga_title = new(@"^(.+?) - ");
+        private readonly Regex _chapter_tom_rozdil = new(@"Том: (.+)\. Розділ: (\d+(?:\.\d+)?)(?: - (.+))? читати українською");
 
 
         public bool IsChapterURL(string url) => Regex.IsMatch(url, @"^https?:\/\/manga\.in\.ua\/chapters\/\S+");
@@ -96,14 +98,14 @@ namespace MangaInUaDownloader.Services
             if (IsChapterURL(url))
             {
                 var html = await GetChapterPageHTML(url, status);
-                var node = ScrapService.Instance.GetHTMLNode(html, XPATH_THIS_CHAPTER);
+                var node = GetPageTitle(html);
 
-                return _manga_title_rn.Match(node.InnerText).Groups[1].Value;
+                return _chapter_manga_title.Match(node.InnerText).Groups[1].Value;
             }
             else
             {
                 var html = await GetMangaPageHTML(url, status);
-                var node = ScrapService.Instance.GetHTMLNode(html, XPATH_HEAD_TITLE);
+                var node = GetPageTitle(html);
                 
                 return _manga_title_head.Match(node.InnerText).Groups[1].Value;
             }
@@ -112,9 +114,9 @@ namespace MangaInUaDownloader.Services
         public async Task<MangaChapter> GetChapterDetails(string url, IStatus status)
         {
             var html = await GetChapterPageHTML(url, status);
-            var node = ScrapService.Instance.GetHTMLNode(html, XPATH_THIS_CHAPTER);
+            var node = GetPageTitle(html);
 
-            var match = _tom_rozdil.Match(node.InnerText);
+            var match = _chapter_tom_rozdil.Match(node.InnerText);
             return new MangaChapter
             {
                 Volume  = Convert.ToInt32 (match.Groups[1].Value),
@@ -131,6 +133,8 @@ namespace MangaInUaDownloader.Services
             if (_mangaHTML is null || _mangaHTML.Value.URL != url)
             {
                 var page = await ScrapService.Instance.OpenWebPageAsync(url, status, "manga");
+                await CheckForNotFound(page, _manga_title_head, MANGA_NOT_FOUND);
+
                 await ScrapService.Instance.LoadElement(page, "div.ltcitems", status, "chapters");
                 var html = await ScrapService.Instance.GetContent(page);
 
@@ -144,6 +148,8 @@ namespace MangaInUaDownloader.Services
             if (_chapterHTML is null || _chapterHTML.Value.URL != url)
             {
                 var page = await ScrapService.Instance.OpenWebPageAsync(url, status, "chapter");
+                await CheckForNotFound(page, _chapter_tom_rozdil, CHAPTER_NOT_FOUND);
+
                 await ScrapService.Instance.Click(page, SELECTOR_BUTTON, status);
                 await ScrapService.Instance.LoadElement(page, SELECTOR_UL, status, "pages");
                 var html = await ScrapService.Instance.GetContent(page);
@@ -152,6 +158,15 @@ namespace MangaInUaDownloader.Services
             }
             return _chapterHTML.Value.HTML;
         }
+
+        private async Task CheckForNotFound(IPage page, Regex regex, string exception)
+        {
+            var node = GetPageTitle(await page.GetContentAsync());
+            if (!regex.IsMatch(node.InnerText))
+                throw new Exception(exception);
+        }
+
+        private HtmlNode GetPageTitle(string html) => ScrapService.Instance.GetHTMLNode(html, XPATH_HEAD_TITLE);
 
         private HtmlNodeCollection GetAllChapterNodes(string html, IStatus status)
         {

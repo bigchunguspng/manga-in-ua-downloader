@@ -5,6 +5,6 @@ namespace MangaInUaDownloader.Model
         public int Volume;
         public float Chapter;
         public bool IsAlternative;
-        public string Translator, Title, URL;
+        public string Translator = null!, Title = null!, URL = null!;
     }
 }

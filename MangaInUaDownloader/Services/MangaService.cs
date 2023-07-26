@@ -11,9 +11,9 @@ namespace MangaInUaDownloader.Services
         public bool   IsMangaURL(string url);
 
         /// <summary>
-        /// Returns chapters grouped by their title
+        /// Returns every translation of each chapter. Chapters are distinct by their volume and chapter numbers.
         /// </summary>
-        public Task<Dictionary<string, List<MangaChapter>>> GetChaptersGrouped(string url, IStatus status);
+        public Task<Dictionary<MangaChapterNumber, List<MangaChapter>>> GetTranslations(string url, IStatus status);
         
         /// <summary>
         /// Returns chapters selected by provided options

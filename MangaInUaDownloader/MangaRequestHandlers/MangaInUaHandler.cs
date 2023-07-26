@@ -84,25 +84,25 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         {
             AnsiConsole.MarkupLine("Виконую команду [yellow][[перелік всіх розділів]][/]");
             
-            Dictionary<string, List<MangaChapter>> chapters = null!;
+            Dictionary<MangaChapterNumber, List<MangaChapter>> chapters = null!;
 
             await AnsiConsole.Status().StartAsync("...", async ctx =>
             {
-                chapters = await _mangaService.GetChaptersGrouped(URL, new StatusStatus(ctx, "yellow"));
+                chapters = await _mangaService.GetTranslations(URL, new StatusStatus(ctx, "yellow"));
             });
             
             var table = CreateChaptersTable().AddColumn(new TableColumn("ALT"));
 
-            foreach (var title in chapters)
+            foreach (var translations in chapters.Values)
             {
-                var chapter = title.Value.First();
-                var alts = title.Value.Count > 1 ? string.Join("; ", title.Value.Skip(1).Select(x => x.Translator)) : "";
+                var chapter = translations.First();
+                var alts = translations.Count > 1 ? string.Join("; ", translations.Skip(1).Select(x => x.Translator)) : "";
                 var style = chapter.Volume % 2 == 0 ? "yellow" : "blue";
                 IRenderable[] row =
                 {
                     new Markup($"[{style}]{chapter.Volume}[/]"),
                     new Markup($"[{style}]{chapter.Chapter}[/]"),
-                    new Markup($"[{style}]{title.Key}[/]"),
+                    new Markup($"[{style}]{chapter.Title}[/]"),
                     new Markup($"[{style}]{chapter.Translator}[/]"),
                     new Markup($"[{style}]{alts}[/]")
                 };

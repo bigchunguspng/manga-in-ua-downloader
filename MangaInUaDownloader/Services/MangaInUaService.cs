@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using MangaInUaDownloader.Model;
+using MangaInUaDownloader.Utils;
 using MangaInUaDownloader.Utils.ConsoleExtensions;
 using PuppeteerSharp;
 
@@ -163,7 +164,7 @@ namespace MangaInUaDownloader.Services
         {
             var node = GetPageTitle(await page.GetContentAsync());
             if (!regex.IsMatch(node.InnerText))
-                throw new Exception(exception);
+                throw new MangaNotFoundException(exception);
         }
 
 

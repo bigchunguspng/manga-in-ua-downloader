@@ -71,7 +71,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             }
             catch (Exception e)
             {
-                AnsiConsole.MarkupLine($"\n[white]{e.GetType()}:[/] [red]{e.Message}[/]\n");
+                AnsiConsole.MarkupLine($"\n[white]{e.GetType().Name}:[/] [red]{e.Message}[/]\n");
                 
                 return -1;
             }

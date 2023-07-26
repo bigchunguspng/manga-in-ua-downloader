@@ -17,7 +17,7 @@ namespace MangaInUaDownloader.Services
         private const string MANGA_NOT_FOUND =           "Manga you are looking for don't exist. Check your URL.";
         private const string CHAPTER_NOT_FOUND = "Manga chapter you are looking for don't exist. Check your URL.";
 
-        private readonly Regex _manga_title_head = new(@"Манґа (.+) читати українською");
+        private readonly Regex _manga_title_head = new(@"(.+) читати українською");
         private readonly Regex _chapter_manga_title = new(@"^(.+?) - ");
         private readonly Regex _chapter_tom_rozdil = new(@"Том: (.+)\. Розділ: (\d+(?:\.\d+)?)(?: - (.+))? читати українською");
         private readonly Regex _chapter_title = new(@".+ - (.+)");
@@ -120,7 +120,7 @@ namespace MangaInUaDownloader.Services
                 var html = await GetMangaPageHTML(url, status);
                 var node = GetPageTitle(html);
                 
-                return _manga_title_head.Match(node.InnerText).Groups[1].Value;
+                return DeTypedTitle(_manga_title_head.Match(node.InnerText).Groups[1].Value);
             }
         }
 
@@ -202,6 +202,13 @@ namespace MangaInUaDownloader.Services
         private bool TranslatedBy(MangaChapter chapter, string translator)
         {
             return chapter.Translator.Contains(translator, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        private string DeTypedTitle(string title)
+        {
+            var types = new[] { "Манґа", "Ваншот", "Манхва", "Маньхуа", "Вебманхва", "Додзінсі", "Доджінші" };
+
+            return types.Any(title.StartsWith) ? title.Split(' ', 2)[1] : title;
         }
     }
 }

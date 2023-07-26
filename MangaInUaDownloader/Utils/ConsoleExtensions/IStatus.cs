@@ -55,7 +55,7 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
     }
 
 
-    public class SilentStatus : IStatus
+    public class FakeStatus : IStatus
     {
         public void SetStatus(string status) { }
     }

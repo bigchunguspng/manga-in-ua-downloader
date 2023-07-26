@@ -130,7 +130,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 chapters = (await _mangaService.GetChapters(URL, status, options)).ToList();
             });
 
-            var title = await _mangaService.GetMangaTitle(URL, new SilentStatus());
+            var title = await _mangaService.GetMangaTitle(URL, new FakeStatus());
 
             if (chapters.Count == 0)
             {

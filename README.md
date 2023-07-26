@@ -1,4 +1,9 @@
-# manga-in-ua-downloader
+# Manga-in-ua-Downloader
+
+![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/bigchunguspng/manga-in-ua-downloader)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/bigchunguspng/manga-in-ua-downloader)
+![GitHub commit activity (master)](https://img.shields.io/github/commit-activity/m/bigchunguspng/manga-in-ua-downloader)
+
 CLI-тулза для завантаження манґи з сайту https://manga.in.ua.
 
 ## Основні можливості

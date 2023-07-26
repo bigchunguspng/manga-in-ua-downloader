@@ -246,6 +246,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         private string Ending_UKR(int n)
         {
+            n = n % 100;
             if (n      is >= 5 and <= 20) return "ів";
             if (n % 10 == 1)              return "";
             if (n % 10 is >= 2 and <=  4) return "и";

@@ -90,7 +90,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             {
                 chapters = await _mangaService.GetTranslations(URL, new StatusStatus(ctx, "yellow"));
             });
-            
+
+            var title = await _mangaService.GetMangaTitle(URL, new FakeStatus());
             var table = CreateChaptersTable().AddColumn(new TableColumn("ALT"));
 
             foreach (var translations in chapters.Values)
@@ -109,6 +110,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 table.AddRow(row);
             }
 
+            AnsiConsole.MarkupLine($"\nЗнайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title}\"[/]:");
             AnsiConsole.Write(table);
         }
 

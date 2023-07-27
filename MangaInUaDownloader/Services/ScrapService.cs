@@ -36,13 +36,25 @@ namespace MangaInUaDownloader.Services
         private async Task OpenBrowser(IStatus status)
         {
             status.SetStatus("Fetching browser...");
+            var relevant = new ValueWrapper<bool>(true);
+            UpdateStatusOnWaiting(status, relevant);
             await FetchBrowser();
+            relevant.Value = false;
 
             status.SetStatus("Launching browser...");
             var pupex = new PuppeteerExtra().Use(new StealthPlugin());
             _browser = await pupex.LaunchAsync(new LaunchOptions { Headless = true });
 
             AppDomain.CurrentDomain.ProcessExit += CloseBrowser;
+        }
+
+        private async void UpdateStatusOnWaiting(IStatus status, ValueWrapper<bool> relevant)
+        {
+            await Task.Delay(1500);
+            if (relevant.Value)
+            {
+                status.SetStatus("Fetching browser [darkorange](can take up to 30 seconds with newly installed app)[/]...");
+            }
         }
 
         private async Task FetchBrowser()

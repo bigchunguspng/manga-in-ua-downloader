@@ -39,7 +39,7 @@ namespace MangaInUaDownloader.Services
 
         public async Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status, MangaDownloadOptions options)
         {
-            var chapters = (await GetChapters(url, status)).Where(options.ChapterHasAppropriateNumber).ToList();
+            var chapters = (await GetChapters(url, status)).Where(options.ChapterNumberIsSatisfying).ToList();
 
             FixNaming(chapters);
 

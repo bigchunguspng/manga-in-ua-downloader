@@ -30,4 +30,11 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
 
         private static bool HasStatus(this ProgressTask task) => task.GetStatusIndex() > -1;
     }
+
+    public class ValueWrapper<T>
+    {
+        public ValueWrapper(T value) { Value = value; }
+
+        public T Value { get; set; }
+    }
 }

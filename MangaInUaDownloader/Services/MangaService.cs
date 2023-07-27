@@ -16,17 +16,23 @@ namespace MangaInUaDownloader.Services
         public Task<Dictionary<MangaChapterNumber, List<MangaChapter>>> GetTranslations(string url, IStatus status);
         
         /// <summary>
-        /// Returns chapters selected by provided options
+        /// Returns a collection of manga chapters selected by provided options.
         /// </summary>
         public Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status, MangaDownloadOptions options);
         
         /// <summary>
-        /// Returns URL of every chapter's page
+        /// Returns a URL of every page of a chapter by chapter's URL.
         /// </summary>
         public Task<List<string>> GetChapterPages   (string url, IStatus status);
 
+        /// <summary>
+        /// Returns a <see cref="MangaChapter"/> object with fully or partially initialized data by chapter's URL.
+        /// </summary>
         public Task<MangaChapter> GetChapterDetails (string url, IStatus status);
         
+        /// <summary>
+        /// Returns a string representation of manga's title by chapter or manga URL.
+        /// </summary>
         public Task<string>       GetMangaTitle     (string url, IStatus status);
     }
 }

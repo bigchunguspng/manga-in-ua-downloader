@@ -1,3 +1,5 @@
+using System.CommandLine;
+using System.CommandLine.Help;
 using Spectre.Console;
 
 namespace MangaInUaDownloader.Utils.ConsoleExtensions
@@ -29,6 +31,12 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
         private static int GetStatusIndex(this ProgressTask task) => task.Description.IndexOf('\t');
 
         private static bool HasStatus(this ProgressTask task) => task.GetStatusIndex() > -1;
+
+
+        public static void HideDefaultValue(this HelpBuilder builder, Option option)
+        {
+            builder.CustomizeSymbol(option, secondColumnText: option.Description);
+        }
     }
 
     public class ValueWrapper<T>

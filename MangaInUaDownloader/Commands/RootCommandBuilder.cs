@@ -5,7 +5,7 @@ namespace MangaInUaDownloader.Commands
 {
     public static class RootCommandBuilder
     {
-        private static readonly RootCommand Root = new("A command line tool to download manga from 'Manga.in.ua'");
+        private static readonly Command Root = new("MiUD", "A command line tool to download manga from 'Manga.in.ua'");
 
         public static readonly Option<float>     ChapterOption = new(     "--chapter", () => float.MinValue, "Chapter number.");
         public static readonly Option<float> FromChapterOption = new("--from-chapter", () => float.MinValue, "Number of the first chapter to be downloaded.") { ArgumentHelpName = "chapter" };
@@ -24,7 +24,7 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Show all chapters.");
         public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Show chapters selected by given query (DEBUG OPTION).");
 
-        public static readonly Argument<Uri> URLArg = new("Manga or chapter URL, e.g: https://manga.in.ua/...html.");
+        public static readonly Argument<Uri> URLArg = new("Manga URL", "URL to a manga or chapter page, e.g: https://manga.in.ua/….html.");
 
         private static void AddAliases()
         {
@@ -47,7 +47,7 @@ namespace MangaInUaDownloader.Commands
             ListSelectedOption.AddAlias("-ls");
         }
 
-        public static RootCommand Build(ICommandHandler handler)
+        public static Command Build(ICommandHandler handler)
         {
             AddAliases();
             

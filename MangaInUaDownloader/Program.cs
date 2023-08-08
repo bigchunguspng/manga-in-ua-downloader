@@ -4,6 +4,7 @@ using System.Globalization;
 using MangaInUaDownloader.Commands;
 using MangaInUaDownloader.MangaRequestHandlers;
 using MangaInUaDownloader.Services;
+using MangaInUaDownloader.Utils.ConsoleExtensions;
 
 namespace MangaInUaDownloader
 {
@@ -18,7 +19,18 @@ namespace MangaInUaDownloader
 
             var handlers = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
             var command = RootCommandBuilder.Build(new RootCommandHandler().WithTheseSubhandlers(handlers));
-            var parser  = new CommandLineBuilder(command).UseDefaults().Build();
+            var parser  = new CommandLineBuilder(command)
+                .UseDefaults()
+                .UseHelp(ctx =>
+                {
+                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.ChapterOption);
+                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.FromChapterOption);
+                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.ToChapterOption);
+                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.VolumeOption);
+                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.FromVolumeOption);
+                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.ToVolumeOption);
+                })
+                .Build();
 
             return await parser.InvokeAsync(args);
             

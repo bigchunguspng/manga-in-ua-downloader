@@ -1,4 +1,5 @@
-﻿using System.CommandLine.Builder;
+﻿using System.CommandLine;
+using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.Globalization;
 using MangaInUaDownloader.Commands;
@@ -17,20 +18,17 @@ namespace MangaInUaDownloader
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
+            var help = new CustomHelpBuilder(Localization.Instance);
+            help.HideDefaultValue(RootCommandBuilder.ChapterOption);
+            help.HideDefaultValue(RootCommandBuilder.FromChapterOption);
+            help.HideDefaultValue(RootCommandBuilder.ToChapterOption);
+            help.HideDefaultValue(RootCommandBuilder.VolumeOption);
+            help.HideDefaultValue(RootCommandBuilder.FromVolumeOption);
+            help.HideDefaultValue(RootCommandBuilder.ToVolumeOption);
+
             var handlers = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
             var command = RootCommandBuilder.Build(new RootCommandHandler().WithTheseSubhandlers(handlers));
-            var parser  = new CommandLineBuilder(command)
-                .UseDefaults()
-                .UseHelp(ctx =>
-                {
-                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.ChapterOption);
-                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.FromChapterOption);
-                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.ToChapterOption);
-                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.VolumeOption);
-                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.FromVolumeOption);
-                    ctx.HelpBuilder.HideDefaultValue(RootCommandBuilder.ToVolumeOption);
-                })
-                .Build();
+            var parser  = new CommandLineBuilder(command).UseDefaults().UseHelpBuilder(_ => help).Build();
 
             return await parser.InvokeAsync(args);
             

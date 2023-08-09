@@ -37,6 +37,16 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
         {
             builder.CustomizeSymbol(option, secondColumnText: option.Description);
         }
+        
+        public static IEnumerable<T> RecurseWhileNotNull<T>(this T? source, Func<T, T?> next) where T : class
+        {
+            while (source is not null)
+            {
+                yield return source;
+
+                source = next(source);
+            }
+        }
     }
 
     public class ValueWrapper<T>

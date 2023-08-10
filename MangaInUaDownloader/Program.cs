@@ -27,7 +27,10 @@ namespace MangaInUaDownloader
 
             var handlers = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
             var command = RootCommandBuilder.Build(new RootCommandHandler().WithTheseSubhandlers(handlers));
-            var parser  = new CommandLineBuilder(command).UseDefaults().UseHelpBuilder(_ => help).Build();
+            var parser  = new CommandLineBuilder(command).UseLocalizationResources(Localization.Instance)
+                .UseVersionOption("--version", "-vs")
+                .UseDefaults()
+                .UseHelpBuilder(_ => help).Build();
 
             return await parser.InvokeAsync(args);
             

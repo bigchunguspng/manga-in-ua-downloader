@@ -279,7 +279,7 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
                     .Select(a => $"{a.Prefix}{a.Alias}".PadRight(3))
                 : symbol.Aliases; // i hope it'll work when i add search co...
 
-            var column1 = string.Join(" | ", aliases);
+            var column1 = string.Join("  ", aliases);
 
             var argument = symbol.Argument();
             if (argument is { IsHidden: false })
@@ -311,12 +311,12 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
         {
             var empty = string.IsNullOrEmpty(argument.HelpName);
             if   (optional && empty) return string.Empty;
-            return $"[tan][[{(empty ? argument.Name : argument.HelpName)}]][/]";
+            return $"[orange3][[{(empty ? argument.Name : argument.HelpName)}]][/]";
         }
 
         private string FormatArgumentUsage(IReadOnlyList<Argument> arguments)
         {
-            return $"[tan][[{string.Join("]] [[", arguments.Select(a => a.Name))}]][/]";
+            return $"[orange3][[{string.Join("]] [[", arguments.Select(a => a.Name))}]][/]";
         }
 
         private bool IsGlobalAndNotHidden(Option x)
@@ -408,21 +408,5 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
         internal Symbol? Symbol { get; }
 
         internal ParentNode? Next { get; set; }
-    }
-
-    public class Localization : LocalizationResources
-    {
-        /// <summary> Gets a global instance of the <see cref="Localization"/> class. </summary>
-        public new static Localization Instance { get; } = new();
-
-        public override string HelpUsageTitle() => "[gold1]Використання:[/]";
-
-        public override string HelpArgumentsTitle() => "[gold1]Аргументи:[/]";
-
-        public override string HelpOptionsTitle() => "[gold1]Опції:[/]";
-
-        public override string HelpCommandsTitle() => "[gold1]Команди:[/]";
-
-        public override string HelpUsageOptions() => Markup.Escape("[опції]");
     }
 }

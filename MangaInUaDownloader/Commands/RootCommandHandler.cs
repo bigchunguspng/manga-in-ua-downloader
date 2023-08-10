@@ -37,7 +37,7 @@ namespace MangaInUaDownloader.Commands
                     return await handler.InvokeAsync(context);
                 }
             }
-            AnsiConsole.MarkupLine("\nCheck the [fuchsia]URL[/]. Your version of this tool supports only these websites:\n");
+            AnsiConsole.MarkupLine("\nПеревірте [fuchsia]URL[/]. Поточна версія програми підтримує лише наступні ресурси:\n");
             foreach (var handler in MangaHandlers) AnsiConsole.MarkupLine($"[deeppink3][[{handler.MANGA_WEBSITE}]][/]");
             AnsiConsole.WriteLine();
 

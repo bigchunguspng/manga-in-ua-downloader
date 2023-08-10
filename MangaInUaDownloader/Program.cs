@@ -1,5 +1,4 @@
-﻿using System.CommandLine;
-using System.CommandLine.Builder;
+﻿using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.Globalization;
 using MangaInUaDownloader.Commands;
@@ -18,7 +17,7 @@ namespace MangaInUaDownloader
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
-            var help = new CustomHelpBuilder(Localization.Instance);
+            var help = new CustomHelpBuilder(Localization.Instance, Console.WindowWidth);
             help.HideDefaultValue(RootCommandBuilder.ChapterOption);
             help.HideDefaultValue(RootCommandBuilder.FromChapterOption);
             help.HideDefaultValue(RootCommandBuilder.ToChapterOption);

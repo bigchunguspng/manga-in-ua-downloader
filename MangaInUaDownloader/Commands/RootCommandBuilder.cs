@@ -5,26 +5,28 @@ namespace MangaInUaDownloader.Commands
 {
     public static class RootCommandBuilder
     {
-        private static readonly Command Root = new("MiUD", "A command line tool to download manga from 'Manga.in.ua'");
+        private const string _chapter = "розділ", _volume = "том", _nick = "нік";
 
-        public static readonly Option<float>     ChapterOption = new(     "--chapter", () => float.MinValue, "Chapter number.");
-        public static readonly Option<float> FromChapterOption = new("--from-chapter", () => float.MinValue, "Number of the first chapter to be downloaded.") { ArgumentHelpName = "chapter" };
-        public static readonly Option<float>   ToChapterOption = new(  "--to-chapter", () => float.MaxValue, "Number of the last chapter to be downloaded.") { ArgumentHelpName = "chapter" };
-            
-        public static readonly Option<int>     VolumeOption = new(     "--volume", () => int.MinValue, "Volume number.");
-        public static readonly Option<int> FromVolumeOption = new("--from-volume", () => int.MinValue, "Number of the first volume to be downloaded.") { ArgumentHelpName = "volume" };
-        public static readonly Option<int>   ToVolumeOption = new(  "--to-volume", () => int.MaxValue, "Number of the last volume to be downloaded.") { ArgumentHelpName = "volume" };
+        private static readonly Command Root = new("MiUD", "Я завантажую [yellow]манґу[/] з сайту [deeppink3]https://manga.in.ua[/]");
 
-        public static readonly Option<bool>  DirectoryOption = new("--directory", "Use this option if you are already in the title's folder.");
-        public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Create a separate folder for each chapter.");
-            
-        public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Download only chapters translated by that translator.") { ArgumentHelpName = "name" };
-        public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Choose chapters translated by that translator if there is a choice.") { ArgumentHelpName = "name" };
+        public static readonly Option<float>     ChapterOption = new(     "--chapter", () => float.MinValue, "Розділ, який слід завантажити.") { ArgumentHelpName = _chapter };
+        public static readonly Option<float> FromChapterOption = new("--from-chapter", () => float.MinValue, "Перший розділ, що слід завантажити.") { ArgumentHelpName = _chapter };
+        public static readonly Option<float>   ToChapterOption = new(  "--to-chapter", () => float.MaxValue, "Останній розділ, що слід завантажити.") { ArgumentHelpName = _chapter };
 
-        public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Show all chapters.");
-        public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Show chapters selected by given query (DEBUG OPTION).");
+        public static readonly Option<int>     VolumeOption = new(     "--volume", () => int.MinValue, "Том, розділи з якого слід завантажити.") { ArgumentHelpName = _volume };
+        public static readonly Option<int> FromVolumeOption = new("--from-volume", () => int.MinValue, "Перший том, що слід завантажити.") { ArgumentHelpName = _volume };
+        public static readonly Option<int>   ToVolumeOption = new(  "--to-volume", () => int.MaxValue, "Останній том, що слід завантажити.") { ArgumentHelpName = _volume };
 
-        public static readonly Argument<Uri> URLArg = new("Manga URL", "URL to a manga or chapter page, e.g: https://manga.in.ua/….html.");
+        public static readonly Option<bool>  DirectoryOption = new("--directory", "Завантажує томи манґи до поточної директорії.");
+        public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Зберігає вміст кожного розділу в окрему папку.");
+
+        public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Обирає лише розділи з певним перекладом.") { ArgumentHelpName = _nick };
+        public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Надає перевагу розділам з певним перекладом.") { ArgumentHelpName = _nick };
+
+        public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Перелічує всі розділи, що є на сайті (без завантаження).");
+        public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Перелічує всі розділи, що відповідають запиту (без завантаження).");
+
+        public static readonly Argument<Uri> URLArg = new("URL", "Посилання на [yellow]сторінку манґи чи її розділ[/], на зразок цього: [deeppink3]https://manga.in.ua/….html.[/]");
 
         private static void AddAliases()
         {

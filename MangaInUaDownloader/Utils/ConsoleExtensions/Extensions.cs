@@ -47,6 +47,14 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
                 source = next(source);
             }
         }
+
+        internal static Argument? Argument(this Symbol symbol) => symbol switch
+        {
+            Option   option   => new Argument<int>(){ HelpName = option.ArgumentHelpName },
+            Command  command  => command.Arguments.FirstOrDefault(),
+            Argument argument => argument,
+            _                 => throw new NotSupportedException()
+        };
     }
 
     public class ValueWrapper<T>

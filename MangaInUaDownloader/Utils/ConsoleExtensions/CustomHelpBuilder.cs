@@ -270,15 +270,16 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
 
         private static string GetIdentifierSymbolUsageLabel(IdentifierSymbol symbol, HelpContext context)
         {
-            var aliases = symbol.Aliases; // todo
-            /*.Select(r => r.SplitPrefix())
-            .OrderBy(r => r.Prefix, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(r => r.Alias, StringComparer.OrdinalIgnoreCase)
-            .GroupBy(t => t.Alias)
-            .Select(t => t.First())
-            .Select(t => $"{t.Prefix}{t.Alias}");*/
+            var aliases = symbol is Option
+                ? symbol.Aliases
+                    .Where(a => symbol is not Option || a.StartsWith('-'))
+                    .Select(PrefixAndAlias)
+                    .OrderBy(a => a.Prefix, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(a => a.Alias, StringComparer.OrdinalIgnoreCase)
+                    .Select(a => $"{a.Prefix}{a.Alias}".PadRight(3))
+                : symbol.Aliases; // i hope it'll work when i add search co...
 
-            var column1 = string.Join(" / ", aliases);
+            var column1 = string.Join(" | ", aliases);
 
             var argument = symbol.Argument();
             if (argument is { IsHidden: false })
@@ -297,6 +298,13 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
             }
 
             return column1;
+            
+
+            (string Prefix, string Alias) PrefixAndAlias(string a)
+            {
+                var index = a.LastIndexOf('-') + 1;
+                return (a.Remove(index), a.Substring(index));
+            }
         }
 
         private static string GetArgumentUsageLabel(Argument argument, bool optional = false)

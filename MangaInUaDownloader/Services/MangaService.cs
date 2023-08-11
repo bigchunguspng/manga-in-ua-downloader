@@ -5,7 +5,7 @@ namespace MangaInUaDownloader.Services
 {
     public interface MangaService
     {
-        public const string UNTITLED = "(Без назви)";
+        public const string UNTITLED = "…";
         
         public bool IsChapterURL(string url);
         public bool   IsMangaURL(string url);

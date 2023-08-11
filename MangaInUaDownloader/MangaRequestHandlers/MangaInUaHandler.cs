@@ -84,7 +84,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         {
             AnsiConsole.MarkupLine("Виконую команду [yellow][[перелік всіх розділів]][/]");
             
-            Dictionary<MangaChapterNumber, List<MangaChapter>> chapters = null!;
+            List<List<MangaChapter>> chapters = null!;
 
             await AnsiConsole.Status().StartAsync("...", async ctx =>
             {
@@ -94,14 +94,22 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             var title = await _mangaService.GetMangaTitle(URL, new FakeStatus());
             var table = CreateChaptersTable().AddColumn(new TableColumn("ALT"));
 
-            foreach (var translations in chapters.Values)
+            var volumes = chapters.DistinctBy(c => c[0].Volume).Count();
+            var count = chapters.Count;
+            for (var i = 0; i < count; i++)
             {
-                var chapter = translations.First();
+                var translations = chapters[i];
+                var chapter  = translations[0];
+
+                var first = i == 0         || chapters[i - 1][0].Volume != chapter.Volume;
+                var last  = i == count - 1 || chapters[i + 1][0].Volume != chapter.Volume;
+
                 var alts = translations.Count > 1 ? string.Join("; ", translations.Skip(1).Select(x => x.Translator)) : "";
-                var style = chapter.Volume % 2 == 0 ? "yellow" : "blue";
+                var style = GetChapterRowStyle(volumes, chapter.Volume);
+
                 IRenderable[] row =
                 {
-                    new Markup($"[{style}]{chapter.Volume}[/]"),
+                    new Markup($"[{style}]{GetVolumeBoxPart(chapter.Volume, first, last)}[/]"),
                     new Markup($"[{style}]{chapter.Chapter}[/]"),
                     new Markup($"[{style}]{chapter.Title}[/]"),
                     new Markup($"[{style}]{chapter.Translator}[/]"),
@@ -134,22 +142,30 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             var title = await _mangaService.GetMangaTitle(URL, new FakeStatus());
 
-            if (chapters.Count == 0)
+            var count = chapters.Count;
+            if (count == 0)
             {
                 AnsiConsole.MarkupLine("\n[yellow]За вашим запитом не знайдено жодного розділу манґи, спробуйте прибрати зайві опції.\n[/]");
                 return;
             }
-            
+
+            var volumes = chapters.DistinctBy(c => c.Volume).Count();
             var table = CreateChaptersTable();
-            
-            foreach (var chapter in chapters)
+
+            for (var i = 0; i < count; i++)
             {
+                var chapter = chapters[i];
+                var first = i == 0         || chapters[i - 1].Volume != chapter.Volume;
+                var last  = i == count - 1 || chapters[i + 1].Volume != chapter.Volume;
+
+                var style = GetChapterRowStyle(volumes, chapter.Volume);
+
                 IRenderable[] row =
                 {
-                    new Text($"{chapter.Volume}"),
-                    new Text($"{chapter.Chapter}"),
-                    new Text(chapter.Title),
-                    new Text(chapter.Translator)
+                    new Markup($"[{style}]{GetVolumeBoxPart(chapter.Volume, first, last)}[/]"),
+                    new Markup($"[{style}]{chapter.Chapter}[/]"),
+                    new Markup($"[{style}]{chapter.Title}[/]"),
+                    new Markup($"[{style}]{chapter.Translator}[/]")
                 };
                 table.AddRow(row);
             }
@@ -217,6 +233,33 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             });
         }
 
+
+        private string GetVolumeBoxPart(int number, bool first, bool last)
+        {
+            if (first)
+            {
+                var s = number.ToString();
+                return last
+                    ? s.PadLeft(3, '─').PadRight(4, '─')
+                    : s.PadLeft(2, '─').PadRight(3, '┐').PadLeft(4, '┌');
+            }
+            if (!last) return "│  │";
+            else       return "└──┘";
+        }
+
+        private string GetChapterRowStyle(int volumes, int volume)
+        {
+            return volumes == 1
+                ? "default"
+                : (volume % 4) switch
+                {
+                    0 => "gold1",
+                    1 => "khaki1",
+                    2 => "gold1",
+                    3 => "orange3",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+        }
 
         private Table CreateChaptersTable()
         {

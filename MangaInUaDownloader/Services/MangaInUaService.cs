@@ -28,13 +28,13 @@ namespace MangaInUaDownloader.Services
         public bool   IsMangaURL(string url) => Regex.IsMatch(url, @"^https?:\/\/manga\.in\.ua\/mangas\/\S+");
 
 
-        public async Task<Dictionary<MangaChapterNumber, List<MangaChapter>>> GetTranslations(string url, IStatus status)
+        public async Task<List<List<MangaChapter>>> GetTranslations(string url, IStatus status)
         {
             var chapters = (await GetChapters(url, status)).ToList();
             
             FixNaming(chapters);
 
-            return chapters.GroupBy(g => new MangaChapterNumber(g.Volume, g.Chapter)).ToDictionary(g => g.Key, g => g.ToList());
+            return chapters.GroupBy(g => new MangaChapterNumber(g.Volume, g.Chapter)).Select(g => g.ToList()).ToList();
         }
 
         public async Task<IEnumerable<MangaChapter>> GetChapters(string url, IStatus status, MangaDownloadOptions options)

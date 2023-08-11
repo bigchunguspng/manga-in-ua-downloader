@@ -13,7 +13,7 @@ namespace MangaInUaDownloader.Services
         /// <summary>
         /// Returns every translation of each chapter. Chapters are distinct by their volume and chapter numbers.
         /// </summary>
-        public Task<Dictionary<MangaChapterNumber, List<MangaChapter>>> GetTranslations(string url, IStatus status);
+        public Task<List<List<MangaChapter>>> GetTranslations(string url, IStatus status);
         
         /// <summary>
         /// Returns a collection of manga chapters selected by provided options.

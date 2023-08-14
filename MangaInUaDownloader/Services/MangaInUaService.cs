@@ -13,10 +13,12 @@ namespace MangaInUaDownloader.Services
         private const string XPATH_CHAPTERS = "//div[@id='linkstocomics']//div[@class='ltcitems']";
         private const string XPATH_PAGES = "//div[@id='comics']//ul[@class='xfieldimagegallery loadcomicsimages']//li//img";
         private const string XPATH_HEAD_TITLE = "//head//title";
+        private const string XPATH_SEARCH_RESULT_ITEM = "//article[@class='item']";
         private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
         private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
         private const string MANGA_NOT_FOUND =           "Manga you are looking for don't exist. Check your URL.";
         private const string CHAPTER_NOT_FOUND = "Manga chapter you are looking for don't exist. Check your URL.";
+        private const string MAIN_PAGE = "https://manga.in.ua/";
 
         private readonly Regex _manga_title_head = new(@"(.+) читати українською");
         private readonly Regex _chapter_manga_title = new(@"^(.+?) - ");
@@ -28,6 +30,37 @@ namespace MangaInUaDownloader.Services
         public bool   IsMangaURL(string url) => Regex.IsMatch(url, @"^https?:\/\/manga\.in\.ua\/mangas\/\S+");
 
 
+        public Task<List<MangaSearchResult>> Search(string query, IStatus status)
+        {
+            var url = $"{MAIN_PAGE}?do=search&subaction=search&story={query}";
+            var html = ScrapService.Instance.GetPlainHTML(url);
+            var nodes = ScrapService.Instance.GetHTMLNodes(html.Text, XPATH_SEARCH_RESULT_ITEM);
+
+            var list = new List<MangaSearchResult>(nodes.Count);
+            foreach (var node in nodes)
+            {
+                var card = node.ChildNodes["div"];
+                var progress = card.ChildNodes["header"].ChildNodes[5].InnerText;
+                var info = card.ChildNodes["main"];
+                var a = info.ChildNodes["h3"].ChildNodes["a"];
+                var title = a.InnerText;
+                var link = a.Attributes["href"].Value;
+                var title1 = a.Attributes["title"].Value;
+
+                var item = new MangaSearchResult()
+                {
+                    TitleUkr = title,
+                    TitleEng = title1,
+                    URL = link,
+                    Progress = progress
+                };
+                list.Add(item);
+            }
+
+            return Task.FromResult(list);
+        }
+        
+        
         public async Task<List<List<MangaChapter>>> GetTranslations(string url, IStatus status)
         {
             var chapters = (await GetChapters(url, status)).ToList();

@@ -30,6 +30,11 @@ namespace MangaInUaDownloader.Commands
                 return -1;
             }
             
+            if (context.ParseResult.GetValueForOption(RootCommandBuilder.SearchOption))
+            {
+                return await MangaHandlers.First().SearchAsync(context);
+            }
+            
             foreach (var handler in MangaHandlers)
             {
                 if (handler.CanHandleThis(URL))

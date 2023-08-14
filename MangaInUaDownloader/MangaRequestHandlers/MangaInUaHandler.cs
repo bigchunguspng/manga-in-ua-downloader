@@ -8,6 +8,7 @@ using MangaInUaDownloader.Utils;
 using MangaInUaDownloader.Utils.ConsoleExtensions;
 using Spectre.Console;
 using Spectre.Console.Rendering;
+using TextCopy;
 using Range = MangaInUaDownloader.Utils.Range;
 
 namespace MangaInUaDownloader.MangaRequestHandlers
@@ -34,6 +35,33 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         public override string MANGA_WEBSITE { get; } = "https://manga.in.ua";
 
         public override bool CanHandleThis(string url) => _url.IsMatch(url);
+
+        public override async Task<int> SearchAsync(InvocationContext context)
+        {
+            var query = context.ParseResult.GetValueForArgument(RootCommandBuilder.URLArg).ToString();
+
+            var result = _mangaService.Search(query, new FakeStatus()).Result;
+            var count = result.Count;
+            
+            Console.WriteLine($"Знайдено {count} результат{Ending_UKR(count)}:");
+
+            foreach (var item in result)
+            {
+                Console.WriteLine(item.TitleUkr);
+                Console.WriteLine(item.TitleEng);
+                Console.WriteLine(item.URL);
+                Console.WriteLine(item.Progress);
+                Console.WriteLine();
+            }
+
+            if (count == 1)
+            {
+                await ClipboardService.SetTextAsync(result[0].URL);
+                Console.WriteLine("URL Copied!");
+            }
+
+            return 0;
+        }
 
         public override async Task<int> InvokeAsync(InvocationContext context)
         {

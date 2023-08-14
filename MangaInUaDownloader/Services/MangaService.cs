@@ -11,6 +11,11 @@ namespace MangaInUaDownloader.Services
         public bool   IsMangaURL(string url);
 
         /// <summary>
+        /// Searches for a manga on a website.
+        /// </summary>
+        public Task<List<MangaSearchResult>> Search(string query, IStatus status);
+
+        /// <summary>
         /// Returns every translation of each chapter. Chapters are distinct by their volume and chapter numbers.
         /// </summary>
         public Task<List<List<MangaChapter>>> GetTranslations(string url, IStatus status);

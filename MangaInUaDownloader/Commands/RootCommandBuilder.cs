@@ -26,6 +26,8 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Перелічує всі розділи, що є на сайті. [dim](без завантаження)[/]");
         public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Перелічує всі розділи, що відповідають запиту. [dim](без завантаження)[/]\n");
 
+        public static readonly Option<bool> SearchOption = new("--search", "Здійснює пошук манґи. [dim](URL не потрібен)[/]\n") { ArgumentHelpName = "пошуковий запит" };
+
         public static readonly Argument<Uri> URLArg = new("URL", "Посилання на [yellow]сторінку манґи чи її розділ[/], на зразок цього: [deeppink3]https://manga.in.ua/….html.[/]");
 
         private static void AddAliases()
@@ -47,6 +49,8 @@ namespace MangaInUaDownloader.Commands
             
             ListChaptersOption.AddAlias("-lc");
             ListSelectedOption.AddAlias("-ls");
+            
+            SearchOption.AddAlias("-s");
         }
 
         public static Command Build(ICommandHandler handler)
@@ -65,6 +69,7 @@ namespace MangaInUaDownloader.Commands
             Root.Add(PreferTranslatorOption);
             Root.Add(ListChaptersOption);
             Root.Add(ListSelectedOption);
+            Root.Add(SearchOption);
 
             Root.AddArgument(URLArg);
 

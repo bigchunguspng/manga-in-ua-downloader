@@ -35,8 +35,13 @@ namespace MangaInUaDownloader.Services
             var url = $"{MAIN_PAGE}?do=search&subaction=search&story={query}";
             var html = ScrapService.Instance.GetPlainHTML(url);
             var nodes = ScrapService.Instance.GetHTMLNodes(html.Text, XPATH_SEARCH_RESULT_ITEM);
+            if (nodes is null)
+            {
+                return Task.FromResult(new List<MangaSearchResult>());
+            }
 
             var list = new List<MangaSearchResult>(nodes.Count);
+
             foreach (var node in nodes)
             {
                 var card = node.ChildNodes["div"];
@@ -207,14 +212,14 @@ namespace MangaInUaDownloader.Services
         {
             status.SetStatus("Collecting chapters...");
             
-            return ScrapService.Instance.GetHTMLNodes(html, XPATH_CHAPTERS);
+            return ScrapService.Instance.GetHTMLNodes(html, XPATH_CHAPTERS)!;
         }
         
         private HtmlNodeCollection GetAllPagesNodes(string html, IStatus status)
         {
             status.SetStatus("Collecting pages...");
             
-            return ScrapService.Instance.GetHTMLNodes(html, XPATH_PAGES);
+            return ScrapService.Instance.GetHTMLNodes(html, XPATH_PAGES)!;
         }
 
 

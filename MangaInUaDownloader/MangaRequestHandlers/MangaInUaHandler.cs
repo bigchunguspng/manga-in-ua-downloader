@@ -42,6 +42,12 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             var result = _mangaService.Search(query, new FakeStatus()).Result;
             var count = result.Count;
+
+            if (count == 0)
+            {
+                Console.WriteLine("Нічого не знайдено.");
+                return 0;
+            }
             
             Console.WriteLine($"Знайдено {count} результат{Ending_UKR(count)}:");
 

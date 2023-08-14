@@ -89,7 +89,7 @@ namespace MangaInUaDownloader.Services
         private void DisposePage(IPage page) => page.DisposeAsync();
 
 
-        public HtmlNodeCollection GetHTMLNodes(string html, string selector)
+        public HtmlNodeCollection? GetHTMLNodes(string html, string selector)
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);

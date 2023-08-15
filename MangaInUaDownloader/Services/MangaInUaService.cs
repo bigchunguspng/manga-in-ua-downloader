@@ -32,6 +32,8 @@ namespace MangaInUaDownloader.Services
 
         public Task<List<MangaSearchResult>> Search(string query, IStatus status)
         {
+            status.SetStatus("Searching...");
+            
             var url = $"{MAIN_PAGE}?do=search&subaction=search&story={query}";
             var html = ScrapService.Instance.GetPlainHTML(url);
             var nodes = ScrapService.Instance.GetHTMLNodes(html.Text, XPATH_SEARCH_RESULT_ITEM);
@@ -45,12 +47,11 @@ namespace MangaInUaDownloader.Services
             foreach (var node in nodes)
             {
                 var card = node.ChildNodes["div"];
-                var progress = card.ChildNodes["header"].ChildNodes[5].InnerText;
-                var info = card.ChildNodes["main"];
-                var a = info.ChildNodes["h3"].ChildNodes["a"];
+                var progress = card.ChildNodes["header"].ChildNodes[^2].InnerText;
+                var a = card.ChildNodes["main"].ChildNodes["h3"].ChildNodes["a"];
                 var link = a.Attributes["href"].Value;
-                var title1 = a.Attributes["title"].Value;
-                var titles = title1.Split('/', 2);
+                var title = a.Attributes["title"].Value;
+                var titles = title.Contains('/') ? title.Split('/', 2) : new[] { title, string.Empty };
 
                 var item = new MangaSearchResult()
                 {

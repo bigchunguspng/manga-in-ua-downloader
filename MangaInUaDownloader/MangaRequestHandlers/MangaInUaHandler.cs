@@ -42,9 +42,10 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             var query = context.ParseResult.GetValueForArgument(RootCommandBuilder.URLArg).ToString();
 
-            var result = _mangaService.Search(query, new FakeStatus()).Result;
-            var count = result.Count;
+            List<MangaSearchResult> result = null!;
+            AnsiConsole.Status().Start("...", ctx => { result = _mangaService.Search(query, new StatusStatus(ctx, "yellow")).Result; });
 
+            var count = result.Count;
             if (count == 0)
             {
                 AnsiConsole.MarkupLine("\n[yellow]Нічого не знайдено.[/]\n");

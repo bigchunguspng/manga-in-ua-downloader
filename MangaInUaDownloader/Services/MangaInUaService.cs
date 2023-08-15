@@ -48,16 +48,16 @@ namespace MangaInUaDownloader.Services
                 var progress = card.ChildNodes["header"].ChildNodes[5].InnerText;
                 var info = card.ChildNodes["main"];
                 var a = info.ChildNodes["h3"].ChildNodes["a"];
-                var title = a.InnerText;
                 var link = a.Attributes["href"].Value;
                 var title1 = a.Attributes["title"].Value;
+                var titles = title1.Split('/', 2);
 
                 var item = new MangaSearchResult()
                 {
-                    TitleUkr = title,
-                    TitleEng = title1,
+                    TitleUkr = titles[0].Trim(),
+                    TitleEng = titles[1].Trim(),
                     URL = link,
-                    Progress = progress
+                    Progress = progress.Trim()
                 };
                 list.Add(item);
             }

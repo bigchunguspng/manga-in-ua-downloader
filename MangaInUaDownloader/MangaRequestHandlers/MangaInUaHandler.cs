@@ -38,6 +38,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         public override async Task<int> SearchAsync(InvocationContext context)
         {
+            AnsiConsole.MarkupLine("Виконую команду [yellow][[пошук манґи]][/]");
+
             var query = context.ParseResult.GetValueForArgument(RootCommandBuilder.URLArg).ToString();
 
             var result = _mangaService.Search(query, new FakeStatus()).Result;
@@ -45,25 +47,39 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             if (count == 0)
             {
-                Console.WriteLine("Нічого не знайдено.");
+                AnsiConsole.MarkupLine("\n[yellow]Нічого не знайдено.[/]\n");
                 return 0;
             }
             
-            Console.WriteLine($"Знайдено {count} результат{Ending_UKR(count)}:");
+            AnsiConsole.MarkupLine($"\nЗа вашим запитом знайдено [blue]{count}[/] результат{Ending_UKR(count)}:");
 
-            foreach (var item in result)
+            for (var i = 0; i < count; i++)
             {
-                Console.WriteLine(item.TitleUkr);
-                Console.WriteLine(item.TitleEng);
-                Console.WriteLine(item.URL);
-                Console.WriteLine(item.Progress);
-                Console.WriteLine();
+                var item = result[i];
+                var number = count > 1 ? (i + 1).ToString().PadLeft(2, ' ') + ". " : "    ";
+                AnsiConsole.MarkupLineInterpolated($"\n{number}{item.TitleUkr} [blue]({item.Progress})[/]");
+                AnsiConsole.MarkupLineInterpolated($"    [dim]{item.TitleEng}[/]");
             }
 
             if (count == 1)
             {
                 await ClipboardService.SetTextAsync(result[0].URL);
-                Console.WriteLine("URL Copied!");
+                AnsiConsole.MarkupLine("\n[yellow]Посилання скопійовано до буферу обміну![/]\n");
+            }
+            else
+            {
+                var selection = new SelectionPrompt<string>()
+                {
+                    Title = "[yellow]\nОберіть те, що вас цікавить:[/]",
+                    PageSize = 12,
+                    MoreChoicesText = "[dim](Прокрутіть вниз, щоб побачити більше варіантів)[/]"
+                };
+                selection.AddChoices(result.Select(x => x.TitleUkr.EscapeMarkup()));
+
+                var choise = AnsiConsole.Prompt(selection);
+
+                await ClipboardService.SetTextAsync(result.First(x => x.TitleUkr.EscapeMarkup() == choise).URL);
+                AnsiConsole.MarkupLine("\n[yellow]Посилання скопійовано до буферу обміну![/]\n");
             }
 
             return 0;
@@ -152,7 +168,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 table.AddRow(row);
             }
 
-            AnsiConsole.MarkupLine($"\nЗнайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title}\"[/]:");
+            AnsiConsole.MarkupLine($"\nЗнайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title.EscapeMarkup()}\"[/]:");
             AnsiConsole.Write(table);
         }
 
@@ -203,7 +219,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 };
                 table.AddRow(row);
             }
-            AnsiConsole.MarkupLine($"\nЗа вашим запитом знайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title}\"[/]:");
+            AnsiConsole.MarkupLine($"\nЗа вашим запитом знайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title.EscapeMarkup()}\"[/]:");
             AnsiConsole.Write(table);
 
             if (ListSelected) return;
@@ -213,7 +229,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
-                AnsiConsole.MarkupLine($"Розпочинаю завантаження до {(MakeDirectory ? $"теки [yellow]\"[link]{root}[/]\"[/]" : "поточної теки")}.");
+                AnsiConsole.MarkupLine($"Розпочинаю завантаження до {(MakeDirectory ? $"теки [yellow]\"[link]{root.EscapeMarkup()}[/]\"[/]" : "поточної теки")}.");
 
                 var downloading = new List<Task>(chapters.Count);
 

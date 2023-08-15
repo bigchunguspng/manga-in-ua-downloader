@@ -36,7 +36,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         public override bool CanHandleThis(string url) => _url.IsMatch(url);
 
-        public override async Task<int> SearchAsync(InvocationContext context)
+        public override async Task SearchAsync(InvocationContext context)
         {
             AnsiConsole.MarkupLine("Виконую команду [yellow][[пошук манґи]][/]");
 
@@ -48,7 +48,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             if (count == 0)
             {
                 AnsiConsole.MarkupLine("\n[yellow]Нічого не знайдено.[/]\n");
-                return 0;
+                return;
             }
             
             AnsiConsole.MarkupLine($"\nЗа вашим запитом знайдено [blue]{count}[/] результат{Ending_UKR(count)}:");
@@ -61,11 +61,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 AnsiConsole.MarkupLineInterpolated($"    [dim]{item.TitleEng}[/]");
             }
 
-            if (count == 1)
-            {
-                await ClipboardService.SetTextAsync(result[0].URL);
-                AnsiConsole.MarkupLine("\n[yellow]Посилання скопійовано до буферу обміну![/]\n");
-            }
+            if (count == 1) await CopyLink(result[0].URL);
             else
             {
                 var selection = new SelectionPrompt<string>()
@@ -78,11 +74,14 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
                 var choise = AnsiConsole.Prompt(selection);
 
-                await ClipboardService.SetTextAsync(result.First(x => x.TitleUkr.EscapeMarkup() == choise).URL);
-                AnsiConsole.MarkupLine("\n[yellow]Посилання скопійовано до буферу обміну![/]\n");
+                await CopyLink(result.First(x => x.TitleUkr.EscapeMarkup() == choise).URL);
             }
 
-            return 0;
+            async Task CopyLink(string url)
+            {
+                await ClipboardService.SetTextAsync(url);
+                AnsiConsole.MarkupLine("\n[yellow]Посилання скопійовано до буферу обміну![/]\n");
+            }
         }
 
         public override async Task<int> InvokeAsync(InvocationContext context)

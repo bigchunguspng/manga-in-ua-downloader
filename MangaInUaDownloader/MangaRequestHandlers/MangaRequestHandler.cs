@@ -8,7 +8,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         
         public abstract bool CanHandleThis(string url);
 
-        public abstract Task<int> SearchAsync(InvocationContext context);
+        public abstract Task      SearchAsync(InvocationContext context);
 
         public abstract Task<int> InvokeAsync(InvocationContext context);
         

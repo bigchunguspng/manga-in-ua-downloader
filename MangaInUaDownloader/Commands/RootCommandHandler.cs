@@ -32,7 +32,9 @@ namespace MangaInUaDownloader.Commands
             
             if (context.ParseResult.GetValueForOption(RootCommandBuilder.SearchOption))
             {
-                return await MangaHandlers.First().SearchAsync(context);
+                await MangaHandlers.First().SearchAsync(context);
+
+                return 0;
             }
             
             foreach (var handler in MangaHandlers)

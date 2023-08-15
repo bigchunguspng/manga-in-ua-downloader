@@ -7,7 +7,7 @@ using PuppeteerSharp;
 
 namespace MangaInUaDownloader.Services
 {
-    public class MangaInUaService : MangaService
+    public class MangaInUaService : IMangaService
     {
         private const string ALT = "Альтернативний переклад";
         private const string XPATH_CHAPTERS = "//div[@id='linkstocomics']//div[@class='ltcitems']";
@@ -117,7 +117,7 @@ namespace MangaInUaDownloader.Services
                 else
                 {
                     var title = _chapter_title.Match(c.Title).Groups[1].Value;
-                    c.Title = string.IsNullOrEmpty(title) ? MangaService.UNTITLED : title;
+                    c.Title = string.IsNullOrEmpty(title) ? IMangaService.UNTITLED : title;
                 }
             }
         }
@@ -141,7 +141,7 @@ namespace MangaInUaDownloader.Services
             {
                 Volume  = Convert.ToInt32 (match.Groups[1].Value),
                 Chapter = Convert.ToSingle(match.Groups[2].Value),
-                Title = match.Groups[3].Success ? match.Groups[3].Value : MangaService.UNTITLED
+                Title = match.Groups[3].Success ? match.Groups[3].Value : IMangaService.UNTITLED
             };
         }
 

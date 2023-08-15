@@ -17,7 +17,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
     {
         private readonly Regex _url = new(@"^https?:\/\/manga\.in\.ua\/(?:(?:mangas)|(?:chapters))\/\S+");
         
-        private readonly MangaService _mangaService;
+        private readonly IMangaService _mangaService;
         
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
@@ -27,7 +27,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         private bool ListChapters, ListSelected;
         private string URL = null!;
 
-        public MangaInUaHandler(MangaService mangaService)
+        public MangaInUaHandler(IMangaService mangaService)
         {
             _mangaService = mangaService;
         }
@@ -337,7 +337,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         private string ChapterDirectoryName(MangaChapter chapter)
         {
-            var name = chapter.Title == MangaService.UNTITLED
+            var name = chapter.Title == IMangaService.UNTITLED
                 ? $"Розділ {chapter.Chapter}"
                 : $"Розділ {chapter.Chapter} - {chapter.Title}";
 

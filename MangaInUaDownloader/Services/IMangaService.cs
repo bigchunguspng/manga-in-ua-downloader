@@ -3,7 +3,7 @@ using MangaInUaDownloader.Utils.ConsoleExtensions;
 
 namespace MangaInUaDownloader.Services
 {
-    public interface MangaService
+    public interface IMangaService
     {
         public const string UNTITLED = "…";
         

@@ -54,6 +54,9 @@ miud -s azumanga
 miud -s "chainsaw man"
 ```
 
+![miud windows terminal example](https://github.com/bigchunguspng/manga-in-ua-downloader/assets/70759405/3014e829-327d-4371-a548-8f6a699ce281)
+
+
 ### Опції
 | Опція                 | Або   | Аргумент | Опис                                                 |
 |:----------------------|:------|:---------|:-----------------------------------------------------|

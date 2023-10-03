@@ -225,7 +225,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             if (ListSelected) return;
 
 
-            var root = MakeDirectory ? Directory.CreateDirectory(title).FullName : Environment.CurrentDirectory;
+            var directory = RemoveIllegalCharacters(title);
+            var root = MakeDirectory ? Directory.CreateDirectory(directory).FullName : Environment.CurrentDirectory;
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {

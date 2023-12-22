@@ -274,11 +274,11 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             else       return "└──┘";
         }
 
-        private string GetChapterRowStyle(int volumes, int volume)
+        private string GetChapterRowStyle(List<int> volumes, int volume)
         {
-            return volumes == 1
+            return volumes.Count == 1
                 ? "default"
-                : (volume % 4) switch
+                : (volumes.IndexOf(volume) % 4) switch
                 {
                     0 => "gold1",
                     1 => "khaki1",
@@ -299,7 +299,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 table.AddColumn(new TableColumn("ALT"));
             }
 
-            var volumes = chapters.DistinctBy(c => c.Volume).Count(); // todo u know what
+            var volumes = chapters.DistinctBy(c => c.Volume).Select(x => x.Volume).ToList();
 
             for (var i = 0; i < count; i++)
             {

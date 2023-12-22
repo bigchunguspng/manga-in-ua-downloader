@@ -245,15 +245,16 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                         var progress = NewChapterProgressTask(ctx, chapter);
                         var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
 
-                        var download = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(progress);
-                        downloading.Add(download);
+                        DownloadTask downloader = Cbz
+                            ? new CbzDownloadTask(CbzFileName(title, chapter), root)
+                            : new RawDownloadTask();
+
+                        downloading.Add(downloader.Of(pages, path, chapter.Chapter, Chapterize).Run(progress));
                     }
                 }
 
                 await Task.WhenAll(downloading);
             });
-            
-            // todo add cbz logic
 
             AnsiConsole.MarkupLine("[green]Манґа завантажена![/]\n");
         }
@@ -288,16 +289,12 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 AnsiConsole.MarkupLine($"\nРозпочинаю завантаження до {(MakeDirectory ? $"теки [yellow]\"[link]{root.EscapeMarkup()}[/]\"[/]" : "поточної теки")}.");
 
                 var progress = NewChapterProgressTask(ctx, chapter);
-                DownloadTask downloader;
-                if (Cbz)
-                {
-                    var name = CbzMangaChapterName(title, chapter);
-                    downloader = new CbzDownloadTask(pages, path, chapter.Chapter, Chapterize, name, root);
-                }
-                else
-                    downloader = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize);
 
-                await downloader.Run(progress);
+                DownloadTask downloader = Cbz
+                    ? new CbzDownloadTask(CbzChapterName(title, chapter), root)
+                    : new RawDownloadTask();
+
+                await downloader.Of(pages, path, chapter.Chapter, Chapterize).Run(progress);
             });
 
             AnsiConsole.MarkupLine("[green]Розділ завантажений![/]\n");
@@ -385,14 +382,19 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             return RemoveIllegalCharacters(name);
         }
 
-        private string CbzMangaChapterName(string title, MangaChapter chapter)
+        private string CbzChapterName(string title, MangaChapter chapter)
         {
             return $"{title} - Том {chapter.Volume}. Розділ {chapter.Chapter}.cbz";
         }
 
-        private string CbzMangaVolumeName(string title, MangaChapter chapter)
+        private string CbzVolumeName(string title, MangaChapter chapter)
         {
             return $"{title} - Том {chapter.Volume}.cbz";
+        }
+
+        private string CbzFileName(string title, MangaChapter chapter)
+        {
+            return Chapterize ? CbzChapterName(title, chapter) : CbzVolumeName(title, chapter);
         }
 
         private static string RemoveIllegalCharacters(string path)

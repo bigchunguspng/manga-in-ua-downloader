@@ -11,8 +11,6 @@ namespace MangaInUaDownloader.Downloaders
     {
         private int page;
 
-        public RawDownloadTask(List<string> links, string path, float chapter, bool chapterize) : base(links, path, chapter, chapterize) { }
-        
         public override async Task Run(ProgressTask progress)
         {
             progress.MaxValue = Links.Count;

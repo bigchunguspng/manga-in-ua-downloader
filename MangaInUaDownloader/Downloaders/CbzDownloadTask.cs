@@ -10,7 +10,7 @@ namespace MangaInUaDownloader.Downloaders
         private readonly string Filename;
         private readonly string RootDirectory;
 
-        public CbzDownloadTask(List<string> links, string path, float chapter, bool chapterize, string filename, string root) : base(links, path, chapter, chapterize)
+        public CbzDownloadTask(string filename, string root)
         {
             Filename = filename;
             RootDirectory = root;
@@ -22,19 +22,11 @@ namespace MangaInUaDownloader.Downloaders
 
             progress.SetStatus("[olive]Archiving...[/]");
 
-            var pages = Directory.GetFiles(Location, Chapterize ? "*.*" : $"{Chapter} - *.*");
-
+            var pattern = Chapterize ? "*.*" : $"{Chapter} - *.*";
+            var pages = Directory.GetFiles(Location, pattern);
             var archive = Path.Combine(RootDirectory, Filename);
 
-            using var zip = ZipFile.Open(archive, ZipArchiveMode.Update);
-            var skip = zip.Entries.Select(x => x.Name).ToList();
-            foreach (var page in pages)
-            {
-                var name = Path.GetFileName(page);
-                if (skip.Contains(name)) continue;
-
-                zip.CreateEntryFromFile(page, name);
-            }
+            await AddPagesToArchive(pages, archive);
 
             progress.SetStatus("[olive]Cleaning...[/]");
             foreach (var page in pages) File.Delete(page);
@@ -43,6 +35,27 @@ namespace MangaInUaDownloader.Downloaders
             if (Chapterize) DeleteEmptyDirectory(Path.GetDirectoryName(Location)!);
 
             progress.SetStatus("[green]Done ✓✓[/]");
+        }
+
+        private async Task AddPagesToArchive(string[] pages, string archive)
+        {
+            try
+            {
+                using var zip = ZipFile.Open(archive, ZipArchiveMode.Update);
+                var skip = zip.Entries.Select(x => x.Name).ToList();
+                foreach (var page in pages)
+                {
+                    var name = Path.GetFileName(page);
+                    if (skip.Contains(name)) continue;
+
+                    zip.CreateEntryFromFile(page, name);
+                }
+            }
+            catch // archive can be used by another process >> try later
+            {
+                await Task.Delay(1000);
+                await AddPagesToArchive(pages, archive);
+            }
         }
 
         private void DeleteEmptyDirectory(string path)

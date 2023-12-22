@@ -42,10 +42,13 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             var query = context.ParseResult.GetValueForArgument(RootCommandBuilder.URLArg).ToString();
 
-            List<MangaSearchResult> result = null!;
-            AnsiConsole.Status().Start("...", ctx => { result = _mangaService.Search(query, new StatusStatus(ctx, "yellow")).Result; });
+            List<MangaSearchResult> results = null!;
+            AnsiConsole.Status().Start("...", ctx =>
+            {
+                results = _mangaService.Search(query, DefaultStatus(ctx)).Result;
+            });
 
-            var count = result.Count;
+            var count = results.Count;
             if (count == 0)
             {
                 AnsiConsole.MarkupLine("\n[yellow]Нічого не знайдено.[/]\n");
@@ -56,13 +59,13 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             for (var i = 0; i < count; i++)
             {
-                var item = result[i];
+                var item = results[i];
                 var number = count > 1 ? (i + 1).ToString().PadLeft(2, ' ') + ". " : "    ";
                 AnsiConsole.MarkupLineInterpolated($"\n{number}{item.TitleUkr} [blue]({item.Progress})[/]");
                 AnsiConsole.MarkupLineInterpolated($"    [dim]{item.TitleEng}[/]");
             }
 
-            if (count == 1) await CopyLink(result[0].URL);
+            if (count == 1) await CopyLink(results[0].URL);
             else
             {
                 var selection = new SelectionPrompt<string>()
@@ -71,11 +74,11 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                     PageSize = 12,
                     MoreChoicesText = "[dim](Прокрутіть вниз, щоб побачити більше варіантів)[/]"
                 };
-                selection.AddChoices(result.Select(x => x.TitleUkr.EscapeMarkup()));
+                selection.AddChoices(results.Select(x => x.TitleUkr.EscapeMarkup()));
 
                 var choise = AnsiConsole.Prompt(selection);
 
-                await CopyLink(result.First(x => x.TitleUkr.EscapeMarkup() == choise).URL);
+                await CopyLink(results.First(x => choise == x.TitleUkr.EscapeMarkup()).URL);
             }
 
             async Task CopyLink(string url)
@@ -135,42 +138,20 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         {
             AnsiConsole.MarkupLine("Виконую команду [yellow][[перелік всіх розділів]][/]");
             
-            List<List<MangaChapter>> chapters = null!;
+            List<List<MangaChapter>> transtalions = null!;
+            string title = null!;
 
             await AnsiConsole.Status().StartAsync("...", async ctx =>
             {
-                chapters = await _mangaService.GetTranslations(URL, new StatusStatus(ctx, "yellow"));
+                var status = DefaultStatus(ctx);
+                transtalions = await _mangaService.GetTranslations(URL, status);
+                title        = await _mangaService.GetMangaTitle  (URL, status);
             });
 
-            var title = await _mangaService.GetMangaTitle(URL, new FakeStatus());
-            var table = CreateChaptersTable().AddColumn(new TableColumn("ALT"));
+            var chapters = transtalions.Select(x => x[0]).ToList();
 
-            var volumes = chapters.DistinctBy(c => c[0].Volume).Count();
-            var count = chapters.Count;
-            for (var i = 0; i < count; i++)
-            {
-                var translations = chapters[i];
-                var chapter  = translations[0];
-
-                var first = i == 0         || chapters[i - 1][0].Volume != chapter.Volume;
-                var last  = i == count - 1 || chapters[i + 1][0].Volume != chapter.Volume;
-
-                var alts = translations.Count > 1 ? string.Join("; ", translations.Skip(1).Select(x => x.Translator)) : "";
-                var style = GetChapterRowStyle(volumes, chapter.Volume);
-
-                IRenderable[] row =
-                {
-                    new Markup($"[{style}]{GetVolumeBoxPart(chapter.Volume, first, last)}[/]"),
-                    new Markup($"[{style}]{chapter.Chapter}[/]"),
-                    new Markup($"[{style}]{chapter.Title}[/]"),
-                    new Markup($"[{style}]{chapter.Translator}[/]"),
-                    new Markup($"[{style}]{alts}[/]")
-                };
-                table.AddRow(row);
-            }
-
-            AnsiConsole.MarkupLine($"\nЗнайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title.EscapeMarkup()}\"[/]:");
-            AnsiConsole.Write(table);
+            AnsiConsole.MarkupLine($"\nЗнайдено {N_CHAPTERS_OF_THIS_MANGA(chapters.Count, title)}");
+            AnsiConsole.Write(ChaptersFoundTable(chapters, transtalions));
         }
 
         private async Task DownloadChapters()
@@ -178,50 +159,29 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             AnsiConsole.MarkupLine($"Виконую команду [yellow][[{(ListSelected ? "перелік" : "завантаження")} декількох розділів]][/]");
             
             List<MangaChapter> chapters = null!;
+            string title = null!;
 
             await AnsiConsole.Status().StartAsync("...", async ctx =>
             {
-                var status = new StatusStatus(ctx, "yellow");
-
-                var c = Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter);
-                var v = Volume  < 0 ? new Range (FromVolume,  ToVolume ) : new Range (Volume,  Volume );
-
-                var options = new MangaDownloadOptions(c, v, Translator, DownloadOtherTranslators);
-
-                chapters = (await _mangaService.GetChapters(URL, status, options)).ToList();
+                var status = DefaultStatus(ctx);
+                var options = new MangaDownloadOptions
+                (
+                    Chapter < 0 ? new RangeF(FromChapter, ToChapter) : new RangeF(Chapter, Chapter),
+                    Volume  < 0 ? new Range (FromVolume,  ToVolume ) : new Range (Volume,  Volume ),
+                    Translator, DownloadOtherTranslators
+                );
+                chapters = (await _mangaService.GetChapters  (URL, status, options)).ToList();
+                title    =  await _mangaService.GetMangaTitle(URL, status);
             });
 
-            var title = await _mangaService.GetMangaTitle(URL, new FakeStatus());
-
-            var count = chapters.Count;
-            if (count == 0)
+            if (chapters.Count == 0)
             {
                 AnsiConsole.MarkupLine("\n[yellow]За вашим запитом не знайдено жодного розділу манґи, спробуйте прибрати зайві опції.\n[/]");
                 return;
             }
 
-            var volumes = chapters.DistinctBy(c => c.Volume).Count();
-            var table = CreateChaptersTable();
-
-            for (var i = 0; i < count; i++)
-            {
-                var chapter = chapters[i];
-                var first = i == 0         || chapters[i - 1].Volume != chapter.Volume;
-                var last  = i == count - 1 || chapters[i + 1].Volume != chapter.Volume;
-
-                var style = GetChapterRowStyle(volumes, chapter.Volume);
-
-                IRenderable[] row =
-                {
-                    new Markup($"[{style}]{GetVolumeBoxPart(chapter.Volume, first, last)}[/]"),
-                    new Markup($"[{style}]{chapter.Chapter}[/]"),
-                    new Markup($"[{style}]{chapter.Title}[/]"),
-                    new Markup($"[{style}]{chapter.Translator}[/]")
-                };
-                table.AddRow(row);
-            }
-            AnsiConsole.MarkupLine($"\nЗа вашим запитом знайдено [blue]{chapters.Count} розділ{Ending_UKR(chapters.Count)}[/] манґи [yellow]\"{title.EscapeMarkup()}\"[/]:");
-            AnsiConsole.Write(table);
+            AnsiConsole.MarkupLine($"\nЗа вашим запитом знайдено {N_CHAPTERS_OF_THIS_MANGA(chapters.Count, title)}");
+            AnsiConsole.Write(ChaptersFoundTable(chapters));
 
             if (ListSelected) return;
 
@@ -230,7 +190,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
-                AnsiConsole.MarkupLine($"Розпочинаю завантаження до {(MakeDirectory ? $"теки [yellow]\"[link]{root.EscapeMarkup()}[/]\"[/]" : "поточної теки")}.");
+                AnsiConsole.MarkupLine(DOWNLOAD_START(root));
 
                 var downloading = new List<Task>(chapters.Count);
 
@@ -265,28 +225,24 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             
             MangaChapter chapter = null!;
             List<string> pages   = null!;
-            string       path    = null!;
-            string       root    = null!;
             string       title   = null!;
 
             await AnsiConsole.Status().StartAsync("...", async ctx =>
             {
-                var status = new StatusStatus(ctx, "yellow");
-
+                var status = DefaultStatus(ctx);
                 pages   = await _mangaService.GetChapterPages  (URL, status);
                 chapter = await _mangaService.GetChapterDetails(URL, status);
                 title   = await _mangaService.GetMangaTitle    (URL, status);
-
-                root = GetRootDirectory(title);
-
-                path = Path.Combine(root, VolumeDirectoryName(chapter.Volume));
-
-                if (Chapterize) path = Path.Combine(path, ChapterDirectoryName(chapter));
             });
+
+            var root = GetRootDirectory(title);
+            var path = Path.Combine(root, VolumeDirectoryName(chapter.Volume));
+
+            if (Chapterize) path = Path.Combine(path, ChapterDirectoryName(chapter));
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
-                AnsiConsole.MarkupLine($"\nРозпочинаю завантаження до {(MakeDirectory ? $"теки [yellow]\"[link]{root.EscapeMarkup()}[/]\"[/]" : "поточної теки")}.");
+                AnsiConsole.MarkupLine("\n" + DOWNLOAD_START(root));
 
                 var progress = NewChapterProgressTask(ctx, chapter);
 
@@ -300,6 +256,10 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             AnsiConsole.MarkupLine("[green]Розділ завантажений![/]\n");
         }
 
+
+        #region USER INTERFACE
+
+        private StatusStatus DefaultStatus(StatusContext ctx) => new(ctx, "yellow");
 
         private string GetVolumeBoxPart(int number, bool first, bool last)
         {
@@ -326,6 +286,50 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                     3 => "orange3",
                     _ => throw new ArgumentOutOfRangeException()
                 };
+        }
+
+        private Table ChaptersFoundTable(List<MangaChapter> chapters, List<List<MangaChapter>>? translationsByChapter = null)
+        {
+            var altsPassed = translationsByChapter != null;
+
+            var count = chapters.Count;
+            var table = CreateChaptersTable();
+            if (altsPassed)
+            {
+                table.AddColumn(new TableColumn("ALT"));
+            }
+
+            var volumes = chapters.DistinctBy(c => c.Volume).Count(); // todo u know what
+
+            for (var i = 0; i < count; i++)
+            {
+                var chapter = chapters[i];
+                var first = i == 0         || chapters[i - 1].Volume != chapter.Volume;
+                var last  = i == count - 1 || chapters[i + 1].Volume != chapter.Volume;
+
+                var style = GetChapterRowStyle(volumes, chapter.Volume);
+
+                List<IRenderable> row = new()
+                {
+                    new Markup($"[{style}]{GetVolumeBoxPart(chapter.Volume, first, last)}[/]"),
+                    new Markup($"[{style}]{chapter.Chapter}[/]"),
+                    new Markup($"[{style}]{chapter.Title}[/]"),
+                    new Markup($"[{style}]{chapter.Translator}[/]")
+                };
+
+                if (altsPassed)
+                {
+                    var translations = translationsByChapter![i];
+                    if (translations.Count > 1)
+                    {
+                        var alts = translations.Skip(1).Select(x => x.Translator);
+                        row.Add(new Markup($"[{style}]{string.Join("; ", alts)}[/]"));
+                    }
+                }
+                table.AddRow(row);
+            }
+
+            return table;
         }
 
         private Table CreateChaptersTable()
@@ -355,6 +359,20 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             return ctx.AddTask($"Том {chapter.Volume}. Розділ {chapter.Chapter}:", maxValue: double.NaN);
         }
 
+        #endregion
+
+        #region STRINGS
+
+        private string N_CHAPTERS_OF_THIS_MANGA(int count, string title)
+        {
+            return $"[blue]{count} розділ{Ending_UKR(count)}[/] манґи [yellow]\"{title.EscapeMarkup()}\"[/]:";
+        }
+        
+        private string DOWNLOAD_START(string path)
+        {
+            var dir = MakeDirectory ? $"теки [yellow]\"[link]{path.EscapeMarkup()}[/]\"[/]" : "поточної теки";
+            return $"Розпочинаю завантаження до {dir}.";
+        }
 
         private string Ending_UKR(int n)
         {
@@ -365,6 +383,10 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             return "ів";
         }
+
+        #endregion
+
+        #region PATH
 
         private string GetRootDirectory(string title)
         {
@@ -402,5 +424,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             var chars = Path.GetInvalidFileNameChars();
             return chars.Aggregate(path, (current, c) => current.Replace(c.ToString(), ""));
         }
+
+        #endregion
     }
 }

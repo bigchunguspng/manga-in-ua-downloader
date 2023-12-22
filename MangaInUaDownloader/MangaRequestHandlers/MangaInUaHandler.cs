@@ -21,7 +21,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
-        private bool MakeDirectory, Chapterize;
+        private bool MakeDirectory, Chapterize, Cbz;
         private string? Translator;
         private bool DownloadOtherTranslators;
         private bool ListChapters, ListSelected;
@@ -98,6 +98,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             MakeDirectory = !context.ParseResult.GetValueForOption(RootCommandBuilder.DirectoryOption);
             Chapterize = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterizeOption);
+            Cbz = context.ParseResult.GetValueForOption(RootCommandBuilder.CbzOption);
             ListChapters = context.ParseResult.GetValueForOption(RootCommandBuilder.ListChaptersOption);
             ListSelected = context.ParseResult.GetValueForOption(RootCommandBuilder.ListSelectedOption);
 
@@ -225,8 +226,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             if (ListSelected) return;
 
 
-            var directory = RemoveIllegalCharacters(title);
-            var root = MakeDirectory ? Directory.CreateDirectory(directory).FullName : Environment.CurrentDirectory;
+            var root = GetRootDirectory(title);
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
@@ -252,6 +252,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
                 await Task.WhenAll(downloading);
             });
+            
+            // todo add cbz logic
 
             AnsiConsole.MarkupLine("[green]Манґа завантажена![/]\n");
         }
@@ -263,6 +265,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             MangaChapter chapter = null!;
             List<string> pages   = null!;
             string       path    = null!;
+            string       root    = null!;
+            string       title   = null!;
 
             await AnsiConsole.Status().StartAsync("...", async ctx =>
             {
@@ -270,18 +274,33 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
                 pages   = await _mangaService.GetChapterPages  (URL, status);
                 chapter = await _mangaService.GetChapterDetails(URL, status);
+                title   = await _mangaService.GetMangaTitle    (URL, status);
 
-                path = VolumeDirectoryName(chapter.Volume);
+                root = GetRootDirectory(title);
 
-                if (MakeDirectory) path = Path.Combine(await _mangaService.GetMangaTitle(URL, status), path);
-                if (Chapterize)    path = Path.Combine(path, ChapterDirectoryName(chapter));
+                path = Path.Combine(root, VolumeDirectoryName(chapter.Volume));
+
+                if (Chapterize) path = Path.Combine(path, ChapterDirectoryName(chapter));
             });
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
+                AnsiConsole.MarkupLine($"\nРозпочинаю завантаження до {(MakeDirectory ? $"теки [yellow]\"[link]{root.EscapeMarkup()}[/]\"[/]" : "поточної теки")}.");
+
                 var progress = NewChapterProgressTask(ctx, chapter);
-                await new RawDownloadTask(pages, path, chapter.Chapter, Chapterize).Run(progress);
+                DownloadTask downloader;
+                if (Cbz)
+                {
+                    var name = CbzMangaChapterName(title, chapter);
+                    downloader = new CbzDownloadTask(pages, path, chapter.Chapter, Chapterize, name, root);
+                }
+                else
+                    downloader = new RawDownloadTask(pages, path, chapter.Chapter, Chapterize);
+
+                await downloader.Run(progress);
             });
+
+            AnsiConsole.MarkupLine("[green]Розділ завантажений![/]\n");
         }
 
 
@@ -350,6 +369,11 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             return "ів";
         }
 
+        private string GetRootDirectory(string title)
+        {
+            return MakeDirectory ? Directory.CreateDirectory(RemoveIllegalCharacters(title)).FullName : Environment.CurrentDirectory;
+        }
+
         private string VolumeDirectoryName(int i) => $"Том {i}";
 
         private string ChapterDirectoryName(MangaChapter chapter)
@@ -359,6 +383,16 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 : $"Розділ {chapter.Chapter} - {chapter.Title}";
 
             return RemoveIllegalCharacters(name);
+        }
+
+        private string CbzMangaChapterName(string title, MangaChapter chapter)
+        {
+            return $"{title} - Том {chapter.Volume}. Розділ {chapter.Chapter}.cbz";
+        }
+
+        private string CbzMangaVolumeName(string title, MangaChapter chapter)
+        {
+            return $"{title} - Том {chapter.Volume}.cbz";
         }
 
         private static string RemoveIllegalCharacters(string path)

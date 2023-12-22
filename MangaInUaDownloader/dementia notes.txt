@@ -1,0 +1,20 @@
+SCRIPTS:
+
+1. pack - creates .nupkg file in .\nupkg\ folder.
+2. release - creates release in .\Releases\ folder.
+
+
+install - installs app from .\nupkg\.
+
+uninstall - uninstalls app.
+
+update = uninstall + install.
+
+
+
+DIRECTORIES:
+
+.\nupkg\    - storage for the every version of the app package file.
+.\Releases\ - storage for the every version of the app release zip-archive.
+
+.\pack\ - temporary place for creating release archive.

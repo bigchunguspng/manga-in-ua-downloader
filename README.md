@@ -1,15 +1,17 @@
 # Manga-in-UA-Downloader
 
-![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/bigchunguspng/manga-in-ua-downloader)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/bigchunguspng/manga-in-ua-downloader)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/bigchunguspng/manga-in-ua-downloader/total?color=green)
+![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/bigchunguspng/manga-in-ua-downloader/latest/total?label=downloads%20(latest)&color=yellow)
+![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/bigchunguspng/manga-in-ua-downloader?color=yellow)
 ![GitHub commit activity (master)](https://img.shields.io/github/commit-activity/m/bigchunguspng/manga-in-ua-downloader)
 
 CLI-тулза для завантаження манґи з сайту https://manga.in.ua.
 
 ## Основні можливості
-- Завантаження ___одного___, ___усіх___ або ___декількох___ розділів манґи.
-- Перегляд наявних на сайті розділів певної манґи.
-- Пошук манґи.
+
+- 🔍 Пошук манґи.
+- 👀 Перегляд наявних на сайті розділів певної манґи.
+- 💾 Завантаження ___одного___, ___усіх___ або ___декількох___ розділів манґи.
 
 ## Встановлення
 
@@ -34,24 +36,24 @@ CLI-тулза для завантаження манґи з сайту https://
 ### Приклади
 
 ```powershell
+# пошук манґи
+miud -s azumanga
+miud -s "chainsaw man"
+
+# перелік усіх розділів манґи
+miud "https://manga.in.ua/mangas/….html" -lc
+
 # завантаження одного розділу манґи
 miud "https://manga.in.ua/chapters/….html"
 
 # завантаження всіх розділів манґи
 miud "https://manga.in.ua/mangas/….html"
 
-# завантаження розділів манґи...
+# завантаження деяких розділів манґи
 miud "https://manga.in.ua/mangas/….html" -v 3 # лише з третього тому
 miud "https://manga.in.ua/mangas/….html" -tv 3 # лише перші три томи
 miud "https://manga.in.ua/mangas/….html" -fc 5 # починаючи з розділу №5
 miud "https://manga.in.ua/mangas/….html" -fc 5 -tc 20 # з п'ятого по двадцятий
-
-# перелік усіх розділів манґи
-miud "https://manga.in.ua/mangas/….html" -lc
-
-# пошук манґи
-miud -s azumanga
-miud -s "chainsaw man"
 ```
 Приклад використання програми через [_Windows Terminal_](https://github.com/microsoft/terminal):
 

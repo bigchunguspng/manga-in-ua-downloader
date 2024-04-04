@@ -53,7 +53,7 @@ namespace MangaInUaDownloader.Services
             await Task.Delay(1500);
             if (relevant.Value)
             {
-                status.SetStatus("Fetching browser... [darkorange](can take up to 30 seconds with newly installed app)[/]");
+                status.SetStatus("Fetching browser... [darkorange](can take up to 30 seconds with a newly installed app)[/]");
             }
         }
 

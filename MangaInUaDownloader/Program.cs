@@ -12,9 +12,6 @@ namespace MangaInUaDownloader
     {
         public static async Task<int> Main(string[] args)
         {
-            Console.OutputEncoding = System.Text.Encoding.Unicode;
-            Console. InputEncoding = System.Text.Encoding.Unicode;
-            
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
             var help = new CustomHelpBuilder(Localization.Instance, Console.WindowWidth);

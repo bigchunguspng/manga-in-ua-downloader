@@ -68,6 +68,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             if (count == 1) await CopyLink(results[0].URL);
             else
             {
+                var nothing = "[нічого]".EscapeMarkup();
                 var selection = new SelectionPrompt<string>()
                 {
                     Title = "[yellow]\nОберіть те, що вас цікавить:[/]",
@@ -75,10 +76,14 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                     MoreChoicesText = "[dim](Прокрутіть вниз, щоб побачити більше варіантів)[/]"
                 };
                 selection.AddChoices(results.Select(x => x.TitleUkr.EscapeMarkup()));
+                selection.AddChoice(nothing);
 
                 var choise = AnsiConsole.Prompt(selection);
-
-                await CopyLink(results.First(x => choise == x.TitleUkr.EscapeMarkup()).URL);
+                if (choise == nothing)
+                {
+                    AnsiConsole.MarkupLine("\n[yellow]Розумію...[/]\n");
+                }
+                else await CopyLink(results.First(x => choise == x.TitleUkr.EscapeMarkup()).URL);
             }
 
             async Task CopyLink(string url)

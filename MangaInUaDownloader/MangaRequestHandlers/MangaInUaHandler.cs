@@ -130,7 +130,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             }
             catch (Exception e)
             {
-                AnsiConsole.MarkupLine($"\n[white]{e.GetType().Name}:[/] [red]{e.Message}[/]\n");
+                AnsiConsole.MarkupLine(ReadableExceptionText(e));
                 
                 return -1;
             }
@@ -193,35 +193,48 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             var root = GetRootDirectory(title);
 
+            Exception? exception = null;
+            var downloading = new List<Task>(chapters.Count);
+
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
                 AnsiConsole.MarkupLine(DOWNLOAD_START(root));
 
-                var downloading = new List<Task>(chapters.Count);
-
                 foreach (var volume in chapters.GroupBy(x => x.Volume))
                 {
                     var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
-                    
-                    foreach (var chapter in volume)
+
+                    ProgressTask progress = null!;
+                    try
                     {
-                        var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
+                        foreach (var chapter in volume)
+                        {
+                            var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
+                            progress = NewChapterProgressTask(ctx, chapter);
 
-                        var progress = NewChapterProgressTask(ctx, chapter);
-                        var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
+                            var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
 
-                        DownloadTask downloader = Cbz
-                            ? new CbzDownloadTask(CbzFileName(title, chapter), root)
-                            : new RawDownloadTask();
+                            DownloadTask downloader = Cbz
+                                ? new CbzDownloadTask(CbzFileName(title, chapter), root)
+                                : new RawDownloadTask();
 
-                        downloading.Add(downloader.Of(pages, path, chapter.Chapter, Chapterize).Run(progress));
+                            downloading.Add(downloader.Of(pages, path, chapter.Chapter, Chapterize).Run(progress));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        exception = e;
+                        progress.SetStatus("[darkorange]Terminated ⨯[/]");
                     }
                 }
 
                 await Task.WhenAll(downloading);
             });
 
-            AnsiConsole.MarkupLine("[green]Манґа завантажена![/]\n");
+            var message = downloading.Count == chapters.Count
+                ? "[green]Манґа завантажена![/]\n"
+                : $"[darkorange]Манґа завантажена частково.[/] Причина:{EXCEPTION_AS_REASON(exception)}";
+            AnsiConsole.MarkupLine(message);
         }
 
         private async Task DownloadSingleChapter()
@@ -367,6 +380,16 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         #endregion
 
         #region STRINGS
+
+        private string ReadableExceptionText(Exception e)
+        {
+            return $"\n[white]{e.GetType().Name}:[/] [red]{e.Message}[/]\n";
+        }
+
+        private string EXCEPTION_AS_REASON(Exception? e)
+        {
+            return e is null ? " невідома\n" : $"\n{ReadableExceptionText(e)}";
+        }
 
         private string N_CHAPTERS_OF_THIS_MANGA(int count, string title)
         {

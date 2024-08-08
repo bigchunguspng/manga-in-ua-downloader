@@ -8,7 +8,7 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>MiUD</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
-        <Version>2.4.3</Version>
+        <Version>2.5.0</Version>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -16,10 +16,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="HtmlAgilityPack" Version="1.11.49" />
+      <PackageReference Include="HtmlAgilityPack" Version="1.11.62" />
       <PackageReference Include="PuppeteerExtraSharp" Version="2.0.0" />
-      <PackageReference Include="PuppeteerSharp" Version="10.1.0" />
-      <PackageReference Include="Spectre.Console" Version="0.47.1-preview.0.11" />
+      <PackageReference Include="PuppeteerSharp" Version="15.0.0" />
+      <PackageReference Include="Spectre.Console" Version="0.49.1" />
       <PackageReference Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
       <PackageReference Include="TextCopy" Version="6.2.1" />
     </ItemGroup>

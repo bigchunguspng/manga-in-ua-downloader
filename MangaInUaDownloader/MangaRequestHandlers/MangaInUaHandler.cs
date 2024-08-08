@@ -395,7 +395,9 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         private string GetRootDirectory(string title)
         {
-            return MakeDirectory ? Directory.CreateDirectory(RemoveIllegalCharacters(title)).FullName : Environment.CurrentDirectory;
+            return MakeDirectory 
+                ? Directory.CreateDirectory(RemoveIllegalChars(title)).FullName 
+                : Environment.CurrentDirectory;
         }
 
         private string VolumeDirectoryName(int i) => $"Том {i}";
@@ -406,17 +408,17 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 ? $"Розділ {chapter.Chapter}"
                 : $"Розділ {chapter.Chapter} - {chapter.Title}";
 
-            return RemoveIllegalCharacters(name);
+            return RemoveIllegalChars(name);
         }
 
         private string CbzChapterName(string title, MangaChapter chapter)
         {
-            return $"{title} - Том {chapter.Volume}. Розділ {chapter.Chapter}.cbz";
+            return $"{RemoveIllegalChars(title)} - Том {chapter.Volume}. Розділ {chapter.Chapter}.cbz";
         }
 
         private string CbzVolumeName(string title, MangaChapter chapter)
         {
-            return $"{title} - Том {chapter.Volume}.cbz";
+            return $"{RemoveIllegalChars(title)} - Том {chapter.Volume}.cbz";
         }
 
         private string CbzFileName(string title, MangaChapter chapter)
@@ -424,10 +426,10 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             return Chapterize ? CbzChapterName(title, chapter) : CbzVolumeName(title, chapter);
         }
 
-        private static string RemoveIllegalCharacters(string path)
+        private static string RemoveIllegalChars(string pathPart)
         {
             var chars = Path.GetInvalidFileNameChars();
-            return chars.Aggregate(path, (current, c) => current.Replace(c.ToString(), ""));
+            return string.Join("", pathPart.Split(chars));
         }
 
         #endregion

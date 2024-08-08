@@ -17,6 +17,7 @@ namespace MangaInUaDownloader.Services
         public static readonly ScrapService Instance = new();
 
         private IBrowser? _browser;
+        private bool _userAgentSet;
 
 
         public async Task<IPage> OpenWebPageAsync(string url, IStatus status, string what)
@@ -27,9 +28,14 @@ namespace MangaInUaDownloader.Services
             }
             
             status.SetStatus($"Opening {what} page...");
-            var page = await _browser!.NewPageAsync();
+            var page = (await _browser!.PagesAsync()).First();
 
-            await page.SetUserAgentAsync(USER_AGENT);
+            if (_userAgentSet == false)
+            {
+                await page.SetUserAgentAsync(USER_AGENT);
+                _userAgentSet = true;
+            }
+
             await page.GoToAsync(url);
 
             return page;
@@ -125,13 +131,10 @@ namespace MangaInUaDownloader.Services
         }
 
 
-        public async Task<string> GetContent(IPage page)
+        public Task<string> GetContent(IPage page)
         {
-            var html = await page.GetContentAsync();
-            DisposePage(page);
-            return html;
+            return page.GetContentAsync();
         }
-        private void DisposePage(IPage page) => page.DisposeAsync();
 
 
         public HtmlNodeCollection? GetHTMLNodes(string html, string selector)

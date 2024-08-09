@@ -9,16 +9,20 @@ namespace MangaInUaDownloader.Services
 {
     public class MangaInUaService : IMangaService
     {
+        private const string MAIN_PAGE = "https://manga.in.ua/";
         private const string ALT = "Альтернативний переклад";
+
         private const string XPATH_CHAPTERS = "//div[@id='linkstocomics']//div[@class='ltcitems']";
         private const string XPATH_PAGES = "//div[@id='comics']//ul[@class='xfieldimagegallery loadcomicsimages']//li//img";
         private const string XPATH_HEAD_TITLE = "//head//title";
         private const string XPATH_SEARCH_RESULT_ITEM = "//article[@class='item']";
+
         private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
         private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
-        private const string MANGA_NOT_FOUND =           "Manga you are looking for don't exist. Check your URL.";
-        private const string CHAPTER_NOT_FOUND = "Manga chapter you are looking for don't exist. Check your URL.";
-        private const string MAIN_PAGE = "https://manga.in.ua/";
+
+        private const string NOT_FOUND  = " can't be reached. Check the URL or try using the \"--slow\" option.";
+        private const string MANGA_NOT_FOUND =           "Manga" + NOT_FOUND;
+        private const string CHAPTER_NOT_FOUND = "Manga chapter" + NOT_FOUND;
 
         private readonly Regex _manga_title_head = new(@"(.+) читати українською");
         private readonly Regex _chapter_manga_title = new(@"^(.+?) - ");
@@ -199,11 +203,11 @@ namespace MangaInUaDownloader.Services
             return _chapterHTML.Value.HTML;
         }
 
-        private async Task CheckForNotFound(IPage page, Regex regex, string exception)
+        private async Task CheckForNotFound(IPage page, Regex regex, string message)
         {
             var node = GetPageTitle(await page.GetContentAsync());
             if (!regex.IsMatch(node.InnerText))
-                throw new MangaNotFoundException(exception);
+                throw new MangaNotFoundException(message);
         }
 
 

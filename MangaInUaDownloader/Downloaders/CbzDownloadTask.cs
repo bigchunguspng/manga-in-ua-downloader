@@ -31,9 +31,6 @@ namespace MangaInUaDownloader.Downloaders
             progress.SetStatus("[olive]Cleaning...[/]");
             foreach (var page in pages) File.Delete(page);
 
-            DeleteEmptyDirectory(Location);
-            if (Chapterize) DeleteEmptyDirectory(Path.GetDirectoryName(Location)!);
-
             progress.SetStatus("[green]Done ✓✓[/]");
         }
 
@@ -53,17 +50,9 @@ namespace MangaInUaDownloader.Downloaders
             }
             catch // archive can be used by another process >> try later
             {
-                await Task.Delay(1000);
+                await Task.Delay(Random.Shared.Next(750, 1250));
                 await AddPagesToArchive(pages, archive);
             }
         }
-
-        private void DeleteEmptyDirectory(string path)
-        {
-            if (DirectoryIsEmpty(path))
-                Directory.Delete(path);
-        }
-
-        private bool DirectoryIsEmpty(string path) => !Directory.EnumerateFileSystemEntries(path).Any();
     }
 }

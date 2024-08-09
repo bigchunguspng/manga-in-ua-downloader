@@ -21,7 +21,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
-        private bool MakeDirectory, Chapterize, Cbz;
+        private bool MakeDirectory, Chapterize, Cbz, Slow;
         private string? Translator;
         private bool DownloadOtherTranslators;
         private bool ListChapters, ListSelected;
@@ -106,6 +106,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             MakeDirectory = !context.ParseResult.GetValueForOption(RootCommandBuilder.DirectoryOption);
             Chapterize = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterizeOption);
+            Slow = context.ParseResult.GetValueForOption(RootCommandBuilder.SlowOption);
             Cbz = context.ParseResult.GetValueForOption(RootCommandBuilder.CbzOption);
             ListChapters = context.ParseResult.GetValueForOption(RootCommandBuilder.ListChaptersOption);
             ListSelected = context.ParseResult.GetValueForOption(RootCommandBuilder.ListSelectedOption);
@@ -195,23 +196,33 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
             Exception? exception = null;
             var downloading = new List<Task>(chapters.Count);
+            var directories = new HashSet<string>();
 
             await GetChapterDownloadingProgress().StartAsync(async ctx =>
             {
                 AnsiConsole.MarkupLine(DOWNLOAD_START(root));
-
-                foreach (var volume in chapters.GroupBy(x => x.Volume))
+                ProgressTask progress = null!;
+                try
                 {
-                    var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
-
-                    ProgressTask progress = null!;
-                    try
+                    foreach (var volume in chapters.GroupBy(x => x.Volume))
                     {
+                        var vol = Path.Combine(root, VolumeDirectoryName(volume.Key));
+
                         foreach (var chapter in volume)
                         {
                             var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
-                            progress = NewChapterProgressTask(ctx, chapter);
+                            directories.Add(path);
 
+                            if (Slow) // wait [5 seconds] OR [till the chapter is 75% loaded]
+                            {
+                                for (var i = 0; i < 10; i++)
+                                {
+                                    await Task.Delay(500);
+                                    if (progress is { Percentage: > 75 }) break;
+                                }
+                            }
+
+                            progress = NewChapterProgressTask(ctx, chapter);
                             var pages = await _mangaService.GetChapterPages(chapter.URL, new ProgressStatus(progress));
 
                             DownloadTask downloader = Cbz
@@ -221,14 +232,18 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                             downloading.Add(downloader.Of(pages, path, chapter.Chapter, Chapterize).Run(progress));
                         }
                     }
-                    catch (Exception e)
-                    {
-                        exception = e;
-                        progress.SetStatus("[darkorange]Terminated ⨯[/]");
-                    }
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                    progress.SetStatus("[darkorange]Terminated ⨯[/]");
                 }
 
                 await Task.WhenAll(downloading);
+
+                if (Cbz)
+                    foreach (var directory in directories)
+                        ClearEmptyDirectories(directory);
             });
 
             var message = downloading.Count == chapters.Count
@@ -269,6 +284,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                     : new RawDownloadTask();
 
                 await downloader.Of(pages, path, chapter.Chapter, Chapterize).Run(progress);
+
+                if (Cbz) ClearEmptyDirectories(path);
             });
 
             AnsiConsole.MarkupLine("[green]Розділ завантажений![/]\n");
@@ -454,6 +471,25 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             var chars = Path.GetInvalidFileNameChars();
             return string.Join("", pathPart.Split(chars));
         }
+
+        #endregion
+
+        #region CLEANING
+
+        private void ClearEmptyDirectories(string chapterLocation)
+        {
+            DeleteEmptyDirectory(chapterLocation);
+            if (Chapterize)
+                DeleteEmptyDirectory(Path.GetDirectoryName(chapterLocation)!);
+        }
+
+        private static void DeleteEmptyDirectory(string path)
+        {
+            if (DirectoryIsEmpty(path)) Directory.Delete(path);
+        }
+
+        private static bool DirectoryIsEmpty(string path)
+            => Directory.EnumerateFileSystemEntries(path).Any() == false;
 
         #endregion
     }

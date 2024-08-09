@@ -19,7 +19,9 @@ namespace MangaInUaDownloader.Commands
 
         public static readonly Option<bool>  DirectoryOption = new("--directory", "Завантажує томи манґи до поточної директорії.");
         public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Зберігає вміст кожного розділу до окремої теки.\n");
-        public static readonly Option<bool>        CbzOption = new("--cbz", "Зберігає манґу у форматі \".cbz\".\n");
+
+        public static readonly Option<bool>        CbzOption = new("--cbz",  "Зберігає манґу у форматі \".cbz\".");
+        public static readonly Option<bool>       SlowOption = new("--slow", "Завантажує розділи один за одним [dim](повільніше)[/]\n");
 
         public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Обирає лише розділи з певним перекладом.") { ArgumentHelpName = _nick };
         public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Надає перевагу розділам з певним перекладом.\n") { ArgumentHelpName = _nick };
@@ -43,7 +45,9 @@ namespace MangaInUaDownloader.Commands
             
             DirectoryOption.AddAlias("-d");
             ChapterizeOption.AddAlias("-cp");
+
             CbzOption.AddAlias("-z");
+            SlowOption.AddAlias("-w");
             
             OnlyTranslatorOption.AddAlias("-o");
             PreferTranslatorOption.AddAlias("-p");
@@ -67,6 +71,7 @@ namespace MangaInUaDownloader.Commands
             Root.Add(DirectoryOption);
             Root.Add(ChapterizeOption);
             Root.Add(CbzOption);
+            Root.Add(SlowOption);
             Root.Add(OnlyTranslatorOption);
             Root.Add(PreferTranslatorOption);
             Root.Add(ListChaptersOption);

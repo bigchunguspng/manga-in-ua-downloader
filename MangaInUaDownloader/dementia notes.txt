@@ -1,7 +1,8 @@
 SCRIPTS:
 
-1. pack - creates .nupkg file in .\nupkg\ folder.
-2. release - creates release in .\Releases\ folder.
+release:
+1. creates .nupkg file in .\nupkg\ folder.
+2. creates release in  .\Releases\ folder.
 
 
 install - installs app from .\nupkg\.

@@ -1,6 +1,5 @@
 using System.CommandLine.Invocation;
 using System.Text.RegularExpressions;
-using MangaInUaDownloader.Commands;
 using MangaInUaDownloader.Downloaders;
 using MangaInUaDownloader.Model;
 using MangaInUaDownloader.Services;
@@ -10,6 +9,7 @@ using Spectre.Console;
 using Spectre.Console.Rendering;
 using TextCopy;
 using Range = MangaInUaDownloader.Utils.Range;
+using Root = MangaInUaDownloader.Commands.RootCommandBuilder;
 
 namespace MangaInUaDownloader.MangaRequestHandlers
 {
@@ -40,7 +40,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         {
             AnsiConsole.MarkupLine("Виконую команду [yellow][[пошук манґи]][/]");
 
-            var query = context.ParseResult.GetValueForArgument(RootCommandBuilder.URLArg).ToString();
+            var query = context.ParseResult.GetValueForArgument(Root.URLArg).ToString();
 
             List<MangaSearchResult> results = null!;
             AnsiConsole.Status().Start("...", ctx =>
@@ -95,24 +95,26 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         public override async Task<int> InvokeAsync(InvocationContext context)
         {
-            URL = context.ParseResult.GetValueForArgument(RootCommandBuilder.URLArg).ToString();
-            
-            Chapter = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterOption);
-            FromChapter = context.ParseResult.GetValueForOption(RootCommandBuilder.FromChapterOption);
-            ToChapter = context.ParseResult.GetValueForOption(RootCommandBuilder.ToChapterOption);
-            Volume = context.ParseResult.GetValueForOption(RootCommandBuilder.VolumeOption);
-            FromVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.FromVolumeOption);
-            ToVolume = context.ParseResult.GetValueForOption(RootCommandBuilder.ToVolumeOption);
+            var result = context.ParseResult;
 
-            MakeDirectory = !context.ParseResult.GetValueForOption(RootCommandBuilder.DirectoryOption);
-            Chapterize = context.ParseResult.GetValueForOption(RootCommandBuilder.ChapterizeOption);
-            Slow = context.ParseResult.GetValueForOption(RootCommandBuilder.SlowOption);
-            Cbz = context.ParseResult.GetValueForOption(RootCommandBuilder.CbzOption);
-            ListChapters = context.ParseResult.GetValueForOption(RootCommandBuilder.ListChaptersOption);
-            ListSelected = context.ParseResult.GetValueForOption(RootCommandBuilder.ListSelectedOption);
+            URL = result.GetValueForArgument(Root.URLArg).ToString();
 
-            var ot = context.ParseResult.GetValueForOption(RootCommandBuilder.OnlyTranslatorOption);
-            var pt = context.ParseResult.GetValueForOption(RootCommandBuilder.PreferTranslatorOption);
+            Chapter     = result.GetValueForOption(Root.ChapterOption);
+            FromChapter = result.GetValueForOption(Root.FromChapterOption);
+            ToChapter   = result.GetValueForOption(Root.ToChapterOption);
+            Volume      = result.GetValueForOption(Root.VolumeOption);
+            FromVolume  = result.GetValueForOption(Root.FromVolumeOption);
+            ToVolume    = result.GetValueForOption(Root.ToVolumeOption);
+
+            MakeDirectory = !result.GetValueForOption(Root.DirectoryOption);
+            Chapterize    =  result.GetValueForOption(Root.ChapterizeOption);
+            Slow = result.GetValueForOption(Root.SlowOption);
+            Cbz  = result.GetValueForOption(Root.CbzOption);
+            ListChapters = result.GetValueForOption(Root.ListChaptersOption);
+            ListSelected = result.GetValueForOption(Root.ListSelectedOption);
+
+            var ot = result.GetValueForOption(Root.OnlyTranslatorOption);
+            var pt = result.GetValueForOption(Root.PreferTranslatorOption);
             Translator = ot ?? pt;
             DownloadOtherTranslators = ot is null;
 

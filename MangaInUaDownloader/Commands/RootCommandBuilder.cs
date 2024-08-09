@@ -5,7 +5,7 @@ namespace MangaInUaDownloader.Commands
 {
     public static class RootCommandBuilder
     {
-        private const string _chapter = "розділ", _volume = "том", _nick = "нік";
+        private const string _chapter = "розділ", _volume = "том", _nick = "нік", _name = "назва";
 
         private static readonly Command Root = new("MiUD", "[bold]Ця програма[/] завантажує [yellow]манґу[/] з сайту [deeppink3]https://manga.in.ua[/]");
 
@@ -17,7 +17,8 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<int> FromVolumeOption = new("--from-volume", () => int.MinValue, "Перший том, що слід завантажити.") { ArgumentHelpName = _volume };
         public static readonly Option<int>   ToVolumeOption = new(  "--to-volume", () => int.MaxValue, "Останній том, що слід завантажити.\n") { ArgumentHelpName = _volume };
 
-        public static readonly Option<bool>  DirectoryOption = new("--directory", "Завантажує томи манґи до поточної директорії.");
+        public static readonly Option<string>    TitleOption = new("--title",      "Зберігає тайтл під іншою назвою.") { ArgumentHelpName = _name };
+        public static readonly Option<bool>  DirectoryOption = new("--directory",  "Завантажує томи манґи до поточної директорії.");
         public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Зберігає вміст кожного розділу до окремої теки.\n");
 
         public static readonly Option<bool>        CbzOption = new("--cbz",  "Зберігає манґу у форматі \".cbz\".");
@@ -33,56 +34,36 @@ namespace MangaInUaDownloader.Commands
 
         public static readonly Argument<Uri> URLArg = new("URL", "Посилання на [yellow]сторінку манґи чи її розділ[/], на зразок цього: [deeppink3]https://manga.in.ua/….html.[/]");
 
-        private static void AddAliases()
-        {
-            ChapterOption.AddAlias("-c");
-            FromChapterOption.AddAlias("-fc");
-            ToChapterOption.AddAlias("-tc");
-            
-            VolumeOption.AddAlias("-v");
-            FromVolumeOption.AddAlias("-fv");
-            ToVolumeOption.AddAlias("-tv");
-            
-            DirectoryOption.AddAlias("-d");
-            ChapterizeOption.AddAlias("-cp");
-
-            CbzOption.AddAlias("-z");
-            SlowOption.AddAlias("-w");
-            
-            OnlyTranslatorOption.AddAlias("-o");
-            PreferTranslatorOption.AddAlias("-p");
-            
-            ListChaptersOption.AddAlias("-lc");
-            ListSelectedOption.AddAlias("-ls");
-            
-            SearchOption.AddAlias("-s");
-        }
-
         public static Command Build(ICommandHandler handler)
         {
-            AddAliases();
-            
-            Root.Add(ChapterOption);
-            Root.Add(FromChapterOption);
-            Root.Add(ToChapterOption);
-            Root.Add(VolumeOption);
-            Root.Add(FromVolumeOption);
-            Root.Add(ToVolumeOption);
-            Root.Add(DirectoryOption);
-            Root.Add(ChapterizeOption);
-            Root.Add(CbzOption);
-            Root.Add(SlowOption);
-            Root.Add(OnlyTranslatorOption);
-            Root.Add(PreferTranslatorOption);
-            Root.Add(ListChaptersOption);
-            Root.Add(ListSelectedOption);
-            Root.Add(SearchOption);
+            AddOption("-c",  ChapterOption);
+            AddOption("-fc", FromChapterOption);
+            AddOption("-tc", ToChapterOption);
+            AddOption("-v",  VolumeOption);
+            AddOption("-fv", FromVolumeOption);
+            AddOption("-tv", ToVolumeOption);
+            AddOption("-t",  TitleOption);
+            AddOption("-d",  DirectoryOption);
+            AddOption("-cp", ChapterizeOption);
+            AddOption("-z",  CbzOption);
+            AddOption("-w",  SlowOption);
+            AddOption("-o",  OnlyTranslatorOption);
+            AddOption("-p",  PreferTranslatorOption);
+            AddOption("-lc", ListChaptersOption);
+            AddOption("-ls", ListSelectedOption);
+            AddOption("-s",  SearchOption);
 
             Root.AddArgument(URLArg);
 
             Root.SetHandler(handler.InvokeAsync);
 
             return Root;
+        }
+
+        private static void AddOption(string alias, Option option)
+        {
+            option.AddAlias(alias);
+            Root.Add(option);
         }
     }
 }

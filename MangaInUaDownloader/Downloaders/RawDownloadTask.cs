@@ -1,14 +1,13 @@
-using System.Net;
 using MangaInUaDownloader.Utils.ConsoleExtensions;
 using Spectre.Console;
-
-#pragma warning disable SYSLIB0014
 
 namespace MangaInUaDownloader.Downloaders
 {
     /// <summary> Downloads all chapter's pages to a specified location in a raw format. </summary>
     public class RawDownloadTask : DownloadTask
     {
+        private static readonly HttpClient _client = new();
+
         private int page;
 
         public override async Task Run(ProgressTask progress)
@@ -17,13 +16,16 @@ namespace MangaInUaDownloader.Downloaders
             progress.StartTask();
             progress.SetStatus("[olive]Downloading...[/]");
             Location = Directory.CreateDirectory(Location).FullName;
-            
-            using var client = new WebClient();
+
             foreach (var link in Links)
             {
                 var number = Chapterize ? PageNumber() : ChapterPageNumber();
                 var output = Path.Combine(RelativePath(), $"{number}{Path.GetExtension(link)}");
-                await client.DownloadFileTaskAsync(link, output);
+
+                await using var stream = await _client.GetStreamAsync(link);
+                await using var fs = new FileStream(output, FileMode.Create);
+                await stream.CopyToAsync(fs);
+
                 progress.Increment(1);
             }
             progress.SetStatus("[green]Done ✓[/]");

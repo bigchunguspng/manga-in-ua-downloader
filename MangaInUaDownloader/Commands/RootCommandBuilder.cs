@@ -5,7 +5,7 @@ namespace MangaInUaDownloader.Commands
 {
     public static class RootCommandBuilder
     {
-        private const string _chapter = "розділ", _volume = "том", _nick = "нік", _name = "назва";
+        private const string _chapter = "розділ", _volume = "том", _nick = "нік", _name = "назва", _seconds = "секунд";
 
         private static readonly Command Root = new("MiUD", "[bold]Ця програма[/] завантажує [yellow]манґу[/] з сайту [deeppink3]https://manga.in.ua[/]");
 
@@ -22,7 +22,7 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<bool> ChapterizeOption = new("--chapterize", "Зберігає вміст кожного розділу до окремої теки.\n");
 
         public static readonly Option<bool>        CbzOption = new("--cbz",  "Зберігає манґу у форматі \".cbz\".");
-        public static readonly Option<bool>       SlowOption = new("--slow", "Завантажує розділи один за одним. [dim](повільніше)[/]\n");
+        public static readonly Option<int>        WaitOption = new("--wait", () => 0, "Додає затримку перед завантаженням кожного розділу.\n") { ArgumentHelpName = _seconds };
 
         public static readonly Option<string>   OnlyTranslatorOption = new("--only-translator", "Обирає лише розділи з певним перекладом.") { ArgumentHelpName = _nick };
         public static readonly Option<string> PreferTranslatorOption = new("--prefer-translator", "Надає перевагу розділам з певним перекладом.\n") { ArgumentHelpName = _nick };
@@ -46,7 +46,7 @@ namespace MangaInUaDownloader.Commands
             AddOption("-d",  DirectoryOption);
             AddOption("-cp", ChapterizeOption);
             AddOption("-z",  CbzOption);
-            AddOption("-w",  SlowOption);
+            AddOption("-w",  WaitOption);
             AddOption("-o",  OnlyTranslatorOption);
             AddOption("-p",  PreferTranslatorOption);
             AddOption("-lc", ListChaptersOption);

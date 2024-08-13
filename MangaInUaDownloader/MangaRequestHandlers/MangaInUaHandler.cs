@@ -21,7 +21,8 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         
         private float Chapter, FromChapter, ToChapter;
         private int Volume, FromVolume, ToVolume;
-        private bool MakeDirectory, Chapterize, Cbz, Slow;
+        private int Wait;
+        private bool MakeDirectory, Chapterize, Cbz;
         private string? Translator, Title;
         private bool DownloadOtherTranslators;
         private bool ListChapters, ListSelected;
@@ -111,7 +112,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             Title         =  result.GetValueForOption(Root.TitleOption);
             MakeDirectory = !result.GetValueForOption(Root.DirectoryOption);
             Chapterize    =  result.GetValueForOption(Root.ChapterizeOption);
-            Slow = result.GetValueForOption(Root.SlowOption);
+            Wait = result.GetValueForOption(Root.WaitOption);
             Cbz  = result.GetValueForOption(Root.CbzOption);
             ListChapters = result.GetValueForOption(Root.ListChaptersOption);
             ListSelected = result.GetValueForOption(Root.ListSelectedOption);
@@ -220,13 +221,9 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                             var path = Chapterize ? Path.Combine(vol, ChapterDirectoryName(chapter)) : vol;
                             directories.Add(path);
 
-                            if (Slow && progress != null) // wait [5 seconds] OR [till the chapter is 75% loaded]
+                            if (Wait > 0 && progress != null)
                             {
-                                for (var i = 0; i < 10; i++)
-                                {
-                                    await Task.Delay(500);
-                                    if (progress is { Percentage: > 75 }) break;
-                                }
+                                await Task.Delay(TimeSpan.FromSeconds(Wait));
                             }
 
                             progress = NewChapterProgressTask(ctx, chapter);

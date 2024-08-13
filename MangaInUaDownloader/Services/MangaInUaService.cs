@@ -20,7 +20,7 @@ namespace MangaInUaDownloader.Services
         private const string SELECTOR_UL = "div#comics ul.xfieldimagegallery.loadcomicsimages";
         private const string SELECTOR_BUTTON = "div#startloadingcomicsbuttom a";
 
-        private const string NOT_FOUND  = " can't be reached. Check the URL or try using the \"--slow\" option.";
+        private const string NOT_FOUND  = " can't be reached. Check the URL or try using the \"--wait\" option.";
         private const string MANGA_NOT_FOUND =           "Manga" + NOT_FOUND;
         private const string CHAPTER_NOT_FOUND = "Manga chapter" + NOT_FOUND;
 

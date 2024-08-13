@@ -26,7 +26,7 @@ namespace MangaInUaDownloader.Services
 
         private readonly Regex _manga_title_head = new(@"(.+) читати українською");
         private readonly Regex _chapter_manga_title = new(@"^(.+?) - ");
-        private readonly Regex _chapter_tom_rozdil = new(@"Том: (.+)\. Розділ: (\d+(?:\.\d+)?)(?: - (.+))? читати українською");
+        private readonly Regex _chapter_tom_rozdil = new(@"Том: (.+)\. Розділ: (\d+(?:[\.,]\d+)?)(?: - (.+))? читати українською");
         private readonly Regex _chapter_title = new(@".+ - (.+)");
 
 

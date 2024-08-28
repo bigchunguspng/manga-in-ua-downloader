@@ -5,7 +5,7 @@
 ![GitHub Release Date - Published_At](https://img.shields.io/github/release-date/bigchunguspng/manga-in-ua-downloader?color=yellow)
 ![GitHub commit activity (master)](https://img.shields.io/github/commit-activity/m/bigchunguspng/manga-in-ua-downloader)
 
-CLI-тулза для завантаження манґи з сайту https://manga.in.ua.
+Термінальна утиліта для завантаження манґи з сайту https://manga.in.ua.
 
 ## Основні можливості
 
@@ -15,27 +15,36 @@ CLI-тулза для завантаження манґи з сайту https://
 
 ## Встановлення
 
-### Підготовка
+1. Завантажте [звідси](https://github.com/bigchunguspng/manga-in-ua-downloader/releases) потрібну версію програми.
 
-Для роботи програми потрібен _.NET SDK 6.0_.
-1. Для перевірки, чи встановлений він на вашій пекарні, пропишіть в терміналі `dotnet --list-sdks`.
-2. Якщо нема, [завантажте](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) і встановіть його. На Linux це можна зробити через термінал:
+#### Windows
 
+1. Завантажте і встановіть [.NET Runtime 6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) або новішу версію.
+2. Помістіть файл `MiUD.exe` в будь-яку зручну вам директорію.
+3. Для змоги викликати програму звідусіль, додайте її розташування до змінної `Path`:
+
+> Пошук » "змінні…" » Змінити змінні оточення для вашого облікового запису » Path » Редагувати
+
+Або див. [гайд](https://youtu.be/pGRw1bgb1gU).
+
+#### Linux
+
+1. Встановіть `dotnet-runtime` та `xsel` (потрібен для копіювання посилань):
 ```bash
-# debian:
-sudo apt-get update && sudo apt-get install -y dotnet-sdk-6.0 xsel
 # arch:
-sudo pacman -Syu dotnet-sdk-6.0 xsel
-# (xsel потрібен для копіювання посилань)
+sudo pacman -S dotnet-runtime-6.0 xsel
+# debian / ubuntu:
+sudo apt-get install dotnet-runtime-6.0 xsel
 ```
+2. Помістіть файл `MiUD` в будь-яку зручну вам директорію.
+3. Для змоги викликати програму звідусіль, додайте її розташування до змінної `PATH`:
 
-### Встановлення
-1. Завантажте [звідси](https://github.com/bigchunguspng/manga-in-ua-downloader/releases) **zip-архів** з останньою версією програми.
-2. Розпакуйте.
-3. Запустіть файл `install.bat` / `install.sh` і дочекайтесь завершення його виконання.
-4. Готово.
+> Додайте рядок `export PATH=$PATH:розташування_теки` до файлу `~/.bashrc`.
 
-Також архів містить два файли для оновлення і видалення програми.
+## Оновлення ♻️
+
+1. Завантажте [звідси](https://github.com/bigchunguspng/manga-in-ua-downloader/releases) останню версію програми.
+2. Помістіть її до теки встановлення замість попередньої версії.
 
 ## Використання
 

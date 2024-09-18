@@ -1,0 +1,2 @@
+dotnet publish -r linux-x64 -p:PublishSingleFile=true -p:AssemblyName=MiUD --self-contained false -c Release
+dotnet publish -r   win-x64 -p:PublishSingleFile=true -p:AssemblyName=MiUD --self-contained false -c Release

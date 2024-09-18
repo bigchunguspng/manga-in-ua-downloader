@@ -26,7 +26,7 @@ namespace MangaInUaDownloader.Services
 
         private readonly Regex _manga_title_head = new(@"(.+) читати українською");
         private readonly Regex _chapter_manga_title = new(@"^(.+?) - ");
-        private readonly Regex _chapter_tom_rozdil = new(@"Том: (.+)\. Розділ: (\d+(?:[\.,]\d+)?)(?: - (.+))? читати українською");
+        private readonly Regex _chapter_tom_rozdil = new(@"Том: (.+)?\. Розділ: (\d+(?:[\.,]\d+)?)?(?: - (.+))? читати українською");
         private readonly Regex _chapter_title = new(@".+ - (.+)");
 
 
@@ -144,9 +144,9 @@ namespace MangaInUaDownloader.Services
             var match = _chapter_tom_rozdil.Match(node.InnerText);
             return new MangaChapter
             {
-                Volume  = Convert.ToInt32 (match.Groups[1].Value),
-                Chapter = Convert.ToSingle(match.Groups[2].Value),
-                Title = match.Groups[3].Success ? match.Groups[3].Value : IMangaService.UNTITLED
+                Volume  = match.Groups[1].Success ? Convert.ToInt32 (match.Groups[1].Value) : 1,
+                Chapter = match.Groups[2].Success ? Convert.ToSingle(match.Groups[2].Value) : 1,
+                Title   = match.Groups[3].Success ? match.Groups[3].Value : IMangaService.UNTITLED
             };
         }
 
@@ -231,11 +231,11 @@ namespace MangaInUaDownloader.Services
         private MangaChapter ChapterFromNode(HtmlNode node)
         {
             var a = node.ChildNodes["a"];
-            return new MangaChapter()
+            return new MangaChapter
             {
-                Volume  = Convert.ToInt32 (node.Attributes["manga-tom"     ].Value),
-                Chapter = Convert.ToSingle(node.Attributes["manga-chappter"].Value),
-                Translator =               node.Attributes["translate"     ].Value,
+                Volume  =   int.TryParse(node.Attributes["manga-tom"     ].Value, out var v) ? v : 1,
+                Chapter = float.TryParse(node.Attributes["manga-chappter"].Value, out var c) ? c : 1,
+                Translator =             node.Attributes["translate"     ].Value,
                 Title = a.InnerText.Replace("...", "…"),
                 URL   = a.Attributes["href"].Value
             };

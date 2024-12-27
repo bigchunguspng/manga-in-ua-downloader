@@ -405,7 +405,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         private string ReadableExceptionText(Exception e)
         {
-            return $"\n[white]{e.GetType().Name}:[/] [red]{e.Message}[/]\n";
+            return $"\n[white]{e.GetType().Name}:[/] [red]{e.Message.EscapeMarkup()}[/]\n";
         }
 
         private string EXCEPTION_AS_REASON(Exception? e)

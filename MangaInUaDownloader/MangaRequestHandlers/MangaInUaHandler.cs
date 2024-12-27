@@ -33,7 +33,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             _mangaService = mangaService;
         }
 
-        public override string MANGA_WEBSITE { get; } = "https://manga.in.ua";
+        public override string MANGA_WEBSITE => "https://manga.in.ua";
 
         public override bool CanHandleThis(string url) => _url.IsMatch(url);
 
@@ -386,7 +386,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             var columns = new ProgressColumn[]
             {
                 new TaskNameColumn(),
-                new ProgressBarColumn() { CompletedStyle = Color.Olive },
+                new ProgressBarColumn { CompletedStyle = Color.Olive },
                 new PagesDownloadedColumn(),
                 new SpinnerColumn(),
                 new TaskStatusColumn()

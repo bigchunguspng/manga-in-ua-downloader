@@ -1,11 +1,15 @@
 using System.CommandLine;
+using System.CommandLine.Builder;
 using System.CommandLine.Help;
+using System.CommandLine.Invocation;
 using Spectre.Console;
 
 namespace MangaInUaDownloader.Utils.ConsoleExtensions
 {
     public static class Extensions
     {
+        // PROGRESS TASK
+
         public static string GetStatus(this ProgressTask task)
         {
             return task.HasStatus() ? task.Description.Substring(task.GetStatusIndex() + 1) : string.Empty;
@@ -33,11 +37,29 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
         private static bool HasStatus(this ProgressTask task) => task.GetStatusIndex() > -1;
 
 
+        // CONFIG
+
         public static void HideDefaultValue(this HelpBuilder builder, Option option)
         {
             builder.CustomizeSymbol(option, secondColumnText: option.Description);
         }
-        
+
+        public static CommandLineBuilder UseParseErrorReporting(this CommandLineBuilder builder, HelpBuilder help)
+        {
+            builder.AddMiddleware(async (context, next) =>
+            {
+                if (context.ParseResult.Errors.Count > 0)
+                    context.InvocationResult = new ParseErrorResult(help);
+                else
+                    await next(context);
+            }, MiddlewareOrder.ErrorReporting);
+
+            return builder;
+        }
+
+
+        // HELP BUILDER
+
         public static IEnumerable<T> RecurseWhileNotNull<T>(this T? source, Func<T, T?> next) where T : class
         {
             while (source is not null)
@@ -50,7 +72,7 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
 
         internal static Argument? Argument(this Symbol symbol) => symbol switch
         {
-            Option   option   => new Argument<int>(){ HelpName = option.ArgumentHelpName },
+            Option   option   => new Argument<int> { HelpName = option.ArgumentHelpName },
             Command  command  => command.Arguments.FirstOrDefault(),
             Argument argument => argument,
             _                 => throw new NotSupportedException()

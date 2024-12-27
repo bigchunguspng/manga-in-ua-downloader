@@ -26,17 +26,32 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
         /// <summary> Gets the default sections to be written for command line help. </summary>
         private IEnumerable<HelpSectionDelegate> GetLayout()
         {
+            if (DrawLogo())
+                yield return EpicLogoSection();
             yield return SynopsisSection();
             yield return CommandUsageSection();
             yield return CommandArgumentsSection();
             yield return OptionsSection();
-            yield return SubcommandsSection();
         }
+
+        private bool DrawLogo() => MaxWidth >= 40;
+
+        private HelpSectionDelegate EpicLogoSection() => _ =>
+        {
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("  [blue] ███╗   ███╗ ██╗[/] [yellow]██╗   ██╗[/] ██████╗ ");
+            AnsiConsole.MarkupLine("  [blue] ████╗ ████║ ╚═╝[/] [yellow]██║   ██║[/] ██╔══██╗");
+            AnsiConsole.MarkupLine("  [blue] ██╔████╔██║ ██╗[/] [yellow]██║   ██║[/] ██║  ██║");
+            AnsiConsole.MarkupLine("  [blue] ██║╚██╔╝██║ ██║[/] [yellow]██║   ██║[/] ██║  ██║");
+            AnsiConsole.MarkupLine("  [blue] ██║ ╚═╝ ██║ ██║[/] [yellow]╚██████╔╝[/] ██████╔╝");
+            AnsiConsole.MarkupLine("  [blue] ╚═╝     ╚═╝ ╚═╝[/] [yellow] ╚═════╝ [/] ╚═════╝ ");
+        };
 
         /// <summary> Writes a help section describing a command's synopsis. </summary>
         private HelpSectionDelegate SynopsisSection() => ctx =>
         {
-            WriteHeading(Indent, ctx.Command.Description);
+            var indent = DrawLogo() ? null : Indent;
+            WriteHeading(indent, ctx.Command.Description);
         };
 
         /// <summary> Writes a help section describing a command's usage. </summary>
@@ -155,7 +170,7 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
         };
 
         ///  <summary> Writes a help section describing a command's subcommands.  </summary>
-        private HelpSectionDelegate SubcommandsSection() => ctx =>
+        /*private HelpSectionDelegate SubcommandsSection() => ctx =>
         {
             var subcommands = ctx.Command.Subcommands.Where(x => !x.IsHidden).Select(x => GetTwoColumnRow(x, ctx)).ToArray();
 
@@ -163,7 +178,7 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
 
             WriteHeading(LocalizationResources.HelpCommandsTitle());
             WriteColumns(subcommands);
-        };
+        };*/
 
 
         private void WriteHeading(string? heading, string? description = null)

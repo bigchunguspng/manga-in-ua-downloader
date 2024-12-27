@@ -22,24 +22,21 @@ namespace MangaInUaDownloader
             help.HideDefaultValue(RootCommandBuilder.FromVolumeOption);
             help.HideDefaultValue(RootCommandBuilder.ToVolumeOption);
 
-            var handlers = new List<MangaRequestHandler>() { new MangaInUaHandler(new MangaInUaService()) };
-            var command = RootCommandBuilder.Build(new RootCommandHandler().WithTheseSubhandlers(handlers));
-            var parser  = new CommandLineBuilder(command).UseLocalizationResources(Localization.Instance)
-                .UseVersionOption("--version", "-vs")
-                .UseDefaults()
+            var requestHandlers = new List<MangaRequestHandler> { new MangaInUaHandler(new MangaInUaService()) };
+            var handler = new RootCommandHandler().WithTheseSubhandlers(requestHandlers);
+            var command = RootCommandBuilder.Build(handler);
+            var parser  = new CommandLineBuilder(command)
+                .UseLocalizationResources(Localization.Instance)
+                .UseVersionOption("-!", "--version")
+                .UseHelp         ("-?", "--help")
+                .UseSuggestDirective()
+                .RegisterWithDotnetSuggest()
+                .UseParseErrorReporting(help)
+                .UseExceptionHandler()
+                .CancelOnProcessTermination()
                 .UseHelpBuilder(_ => help).Build();
 
             return await parser.InvokeAsync(args);
-            
-            /*
-             * .UseHost(_ => Host.CreateDefaultBuilder(args), (builder) =>
-                {
-                    builder
-                        .ConfigureServices(services => { services.TryAddSingleton<MangaService>(); })
-                        .ConfigureLogging(loggingBuilder => loggingBuilder.ClearProviders())
-                        .UseCommandHandler<RootCommand, RootCommandHandler>();
-                }) // bruh i definetly gonna need this at some point
-             */
         }
     }
 }

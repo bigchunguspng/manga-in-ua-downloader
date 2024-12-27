@@ -40,7 +40,7 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
 
         public override string SuggestionsTokenNotMatched(string token)
         {
-            return $"Що ще за \"{token}\"? Можливо ви мали на увазі щось із цього?";
+            return $"Не вдалося розпізнати \"{token}\". Можливо ви мали на увазі щось із цього?";
         }
 
         public override string VersionOptionCannotBeCombinedWithOtherArguments(string option)

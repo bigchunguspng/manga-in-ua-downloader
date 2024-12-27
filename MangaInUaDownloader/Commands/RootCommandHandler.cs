@@ -45,7 +45,7 @@ namespace MangaInUaDownloader.Commands
                 }
             }
             AnsiConsole.MarkupLine("\nПеревірте [fuchsia]URL[/]. Поточна версія програми підтримує лише наступні ресурси:\n");
-            foreach (var handler in MangaHandlers) AnsiConsole.MarkupLine($"[deeppink3][[{handler.MANGA_WEBSITE}]][/]");
+            foreach (var handler in MangaHandlers) AnsiConsole.MarkupLine($" > [deeppink3]{handler.MANGA_WEBSITE}[/]");
             AnsiConsole.WriteLine();
 
             return -1;

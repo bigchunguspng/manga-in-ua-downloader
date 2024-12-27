@@ -7,7 +7,7 @@ namespace MangaInUaDownloader.Commands
     {
         private const string _chapter = "розділ", _volume = "том", _nick = "нік", _name = "назва", _seconds = "секунд";
 
-        private static readonly Command Root = new("MiUD", "[bold]Ця програма[/] завантажує [yellow]манґу[/] з сайту [deeppink3]https://manga.in.ua[/]");
+        private static readonly Command Root = new("MiUD", "[bold]Ця програма[/] завантажує [yellow]манґу[/] з сайту [deeppink3]https://manga.in.ua[/].");
 
         public static readonly Option<float>     ChapterOption = new(     "--chapter", () => float.MinValue, "Розділ, що слід завантажити.") { ArgumentHelpName = _chapter };
         public static readonly Option<float> FromChapterOption = new("--from-chapter", () => float.MinValue, "Перший розділ, що слід завантажити.") { ArgumentHelpName = _chapter };
@@ -32,7 +32,7 @@ namespace MangaInUaDownloader.Commands
 
         public static readonly Option<bool> SearchOption = new("--search", "Здійснює пошук манґи. [dim](URL не потрібен)[/]\n") { ArgumentHelpName = "пошуковий запит" };
 
-        public static readonly Argument<Uri> URLArg = new("URL", "Посилання на [yellow]сторінку манґи чи її розділ[/], на зразок цього: [deeppink3]https://manga.in.ua/….html.[/]");
+        public static readonly Argument<Uri> URLArg = new("URL", "Посилання на [yellow]сторінку манґи чи її розділ[/].");
 
         public static Command Build(ICommandHandler handler)
         {

@@ -44,7 +44,17 @@ namespace MangaInUaDownloader.Utils.ConsoleExtensions
             AnsiConsole.MarkupLine("  [blue] ██╔████╔██║ ██╗[/] [yellow]██║   ██║[/] ██║  ██║");
             AnsiConsole.MarkupLine("  [blue] ██║╚██╔╝██║ ██║[/] [yellow]██║   ██║[/] ██║  ██║");
             AnsiConsole.MarkupLine("  [blue] ██║ ╚═╝ ██║ ██║[/] [yellow]╚██████╔╝[/] ██████╔╝");
-            AnsiConsole.MarkupLine("  [blue] ╚═╝     ╚═╝ ╚═╝[/] [yellow] ╚═════╝ [/] ╚═════╝ ");
+            AnsiConsole.Markup    ("  [blue] ╚═╝     ╚═╝ ╚═╝[/] [yellow] ╚═════╝ [/] ╚═════╝ ");
+            if (MaxWidth >= 48)
+            {
+                var version = CliConfigDumpster.AssemblyVersion.Value.Split('+')[0];
+                if (!string.IsNullOrWhiteSpace(version))
+                    AnsiConsole.MarkupLine($"v{version}");
+            }
+            else
+            {
+                AnsiConsole.WriteLine();
+            }
         };
 
         /// <summary> Writes a help section describing a command's synopsis. </summary>

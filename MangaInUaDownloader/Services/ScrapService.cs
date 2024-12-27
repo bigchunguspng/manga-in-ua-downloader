@@ -94,7 +94,7 @@ namespace MangaInUaDownloader.Services
             };
 
             var path = paths.FirstOrDefault(File.Exists);
-            if (path is not null) AnsiConsole.MarkupLine($"[dim]Using \"{path}\"[/]");
+            if (path is not null) AnsiConsole.MarkupLine($"[dim]Використовую \"{path}\"[/]");
 
             return path;
         }

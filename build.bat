@@ -1,0 +1,1 @@
+dotnet build -p:AssemblyName=MiUD -c Release

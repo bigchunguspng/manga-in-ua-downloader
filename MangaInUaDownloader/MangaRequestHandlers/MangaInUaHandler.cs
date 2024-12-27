@@ -42,7 +42,10 @@ namespace MangaInUaDownloader.MangaRequestHandlers
         {
             AnsiConsole.MarkupLine("Виконую команду [yellow][[пошук манґи]][/]");
 
-            var query = context.ParseResult.GetValueForArgument(Root.URLArg).ToString();
+            var result = context.ParseResult;
+
+            var query = result.GetValueForArgument(Root.URLArg).ToString();
+            var print = result.GetValueForOption(Root.PrintUrlOption);
 
             List<MangaSearchResult> results = null!;
             AnsiConsole.Status().Start("...", ctx =>
@@ -67,7 +70,7 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 AnsiConsole.MarkupLineInterpolated($"    [dim]{item.TitleEng}[/]");
             }
 
-            if (count == 1) await CopyLink(results[0].URL);
+            if (count == 1) await SendLink(results[0].URL);
             else
             {
                 var nothing = "[нічого]".EscapeMarkup();
@@ -85,13 +88,22 @@ namespace MangaInUaDownloader.MangaRequestHandlers
                 {
                     AnsiConsole.MarkupLine("\n[yellow]Розумію...[/]\n");
                 }
-                else await CopyLink(results.First(x => choise == x.TitleUkr.EscapeMarkup()).URL);
+                else await SendLink(results.First(x => choise == x.TitleUkr.EscapeMarkup()).URL);
             }
 
-            async Task CopyLink(string url)
+            return;
+
+            async Task SendLink(string url)
             {
-                await ClipboardService.SetTextAsync(url);
-                AnsiConsole.MarkupLine("\n[yellow]Посилання скопійовано до буферу обміну![/]\n");
+                if (print)
+                {
+                    AnsiConsole.MarkupLine($"\n[yellow]Посилання:[/]\n[deeppink3]{url.EscapeMarkup()}[/]\n");
+                }
+                else
+                {
+                    await ClipboardService.SetTextAsync(url);
+                    AnsiConsole.MarkupLine("\n[yellow]Посилання скопійовано до буферу обміну![/]\n");
+                }
             }
         }
 

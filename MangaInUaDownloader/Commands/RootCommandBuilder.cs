@@ -30,7 +30,8 @@ namespace MangaInUaDownloader.Commands
         public static readonly Option<bool> ListChaptersOption = new("--list-chapters", "Перелічує всі розділи, що є на сайті. [dim](без завантаження)[/]");
         public static readonly Option<bool> ListSelectedOption = new("--list-selected", "Перелічує всі розділи, що відповідають запиту. [dim](без завантаження)[/]\n");
 
-        public static readonly Option<bool> SearchOption = new("--search", "Здійснює пошук манґи. [dim](URL не потрібен)[/]\n") { ArgumentHelpName = "пошуковий запит" };
+        public static readonly Option<bool>   SearchOption = new("--search", "Здійснює пошук манґи. [dim](URL не потрібен)[/]") { ArgumentHelpName = "пошуковий запит" };
+        public static readonly Option<bool> PrintUrlOption = new("--url", "Виводить посилання на знайдену манґу в термінал.\n");
 
         public static readonly Argument<Uri> URLArg = new("URL", "Посилання на [yellow]сторінку манґи чи її розділ[/].");
 
@@ -52,6 +53,7 @@ namespace MangaInUaDownloader.Commands
             AddOption("-lc", ListChaptersOption);
             AddOption("-ls", ListSelectedOption);
             AddOption("-s",  SearchOption);
+            AddOption("-u",  PrintUrlOption);
 
             Root.AddArgument(URLArg);
 

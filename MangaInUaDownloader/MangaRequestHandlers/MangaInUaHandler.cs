@@ -40,6 +40,18 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         public override async Task SearchAsync(InvocationContext context)
         {
+            try
+            {
+                await SearchInternalAsync(context);
+            }
+            catch (Exception e)
+            {
+                AnsiConsole.MarkupLine(ReadableExceptionText(e));
+            }
+        }
+
+        private async Task SearchInternalAsync(InvocationContext context)
+        {
             AnsiConsole.MarkupLine("Виконую команду [yellow][[пошук манґи]][/]");
 
             var result = context.ParseResult;
@@ -110,6 +122,20 @@ namespace MangaInUaDownloader.MangaRequestHandlers
 
         public override async Task<int> InvokeAsync(InvocationContext context)
         {
+            try
+            {
+                return await InvokeInternalAsync(context);
+            }
+            catch (Exception e)
+            {
+                AnsiConsole.MarkupLine(ReadableExceptionText(e));
+
+                return -1;
+            }
+        }
+
+        private async Task<int> InvokeInternalAsync(InvocationContext context)
+        {
             var result = context.ParseResult;
 
             URL = result.GetValueForArgument(Root.URLArg).ToString();
@@ -134,25 +160,16 @@ namespace MangaInUaDownloader.MangaRequestHandlers
             Translator = ot ?? pt;
             DownloadOtherTranslators = ot is null;
 
-            try
+            if      (_mangaService.IsChapterURL(URL))
             {
-                if      (_mangaService.IsChapterURL(URL))
-                {
-                    await DownloadSingleChapter();
-                }
-                else if (_mangaService.IsMangaURL(URL))
-                {
-                    if (ListChapters) await ListAvailableChapters();
-                    else              await DownloadChapters();
-                }
-                else return 1;
+                await DownloadSingleChapter();
             }
-            catch (Exception e)
+            else if (_mangaService.IsMangaURL(URL))
             {
-                AnsiConsole.MarkupLine(ReadableExceptionText(e));
-                
-                return -1;
+                if (ListChapters) await ListAvailableChapters();
+                else              await DownloadChapters();
             }
+            else return 1;
 
             return 0;
         }

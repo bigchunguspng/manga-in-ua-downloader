@@ -15,7 +15,8 @@ public static class CliConfigDumpster
 
     static CliConfigDumpster()
     {
-        HelpBuilder = new CustomHelpBuilder(Localization.Instance, Console.WindowWidth);
+        var width = Console.IsOutputRedirected ? 120 : Console.WindowWidth;
+        HelpBuilder = new CustomHelpBuilder(Localization.Instance, width);
         HelpBuilder.HideDefaultValue(RootCommandBuilder.ChapterOption);
         HelpBuilder.HideDefaultValue(RootCommandBuilder.FromChapterOption);
         HelpBuilder.HideDefaultValue(RootCommandBuilder.ToChapterOption);

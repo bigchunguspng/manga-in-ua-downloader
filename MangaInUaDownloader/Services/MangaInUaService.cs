@@ -179,6 +179,14 @@ namespace MangaInUaDownloader.Services
                 var page = await ScrapService.Instance.OpenWebPageAsync(url, status, "manga");
                 await CheckForNotFound(page, _manga_title_head, MANGA_NOT_FOUND);
 
+                var linkHandle = await page.QuerySelectorAsync("div.linkstocomics");
+                if (linkHandle == null)
+                {
+                    var nameHandle = await page.QuerySelectorAsync("span.UAname");
+                    var name = await (await nameHandle.GetPropertyAsync("textContent")).JsonValueAsync<string>();
+                    if (name.Contains("ЛІЦЕНЗОВАНО")) throw new Exception("Манґу ліцензовано.");
+                }
+
                 await ScrapService.Instance.LoadElement(page, "div.ltcitems", status, "chapters");
                 var html = await ScrapService.Instance.GetContent(page);
 

@@ -19,7 +19,7 @@
 
 #### Windows
 
-1. Завантажте і встановіть [.NET Runtime 6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) або новішу версію.
+1. Завантажте і встановіть [.NET Runtime 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) або новішу версію.
 2. Помістіть файл `MiUD.exe` в будь-яку зручну вам директорію.
 3. Для змоги викликати програму звідусіль, додайте її розташування до змінної `Path`:
 
@@ -32,9 +32,9 @@
 1. Встановіть `dotnet-runtime` та `xsel` (потрібен для копіювання посилань):
 ```bash
 # arch:
-sudo pacman -S dotnet-runtime-6.0 xsel
+sudo pacman -S dotnet-runtime-8.0 xsel
 # debian / ubuntu:
-sudo apt-get install dotnet-runtime-6.0 xsel
+sudo apt-get install dotnet-runtime-8.0 xsel
 ```
 2. Помістіть файл `MiUD` в будь-яку зручну вам директорію.
 3. Для змоги викликати програму звідусіль, додайте її розташування до змінної `PATH`:
